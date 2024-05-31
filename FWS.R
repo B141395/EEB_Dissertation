@@ -19,6 +19,12 @@ cor(PopD[, c("Hinds", "Adults", "Total", "LU_Total")])
 
 cor(Density[, c("Total", "Adults", "Hinds", "Stags","Calves","Calves_M","Calves_F","LU_Total")])
 
+FWS$S_Hinds<-scale(FWS$Hinds)
+FWS$S_Adults<-scale(FWS$Adults)
+FWS$S_Total<-scale(FWS$Total)
+FWS$S_LU_Total<-scale(FWS$LU_Total)
+FWS$S_BirthWt<-scale(FWS$BirthWt)
+FWS$S_MumAgeSquared<-scale(FWS$MumAgeSquared)
 
 str(FWS)
 
@@ -29,20 +35,20 @@ plot(tapply(FWS$LU_Total, FWS$DeerYear, mean),tapply(FWS$Total, FWS$DeerYear, me
 
 
 library(glmmTMB)
-
 Hinds<-glmmTMB(FWSurvival~Hinds
-               +Sex
-               +MotherStatus
-               +MumAgeSquared
-               +BirthWt
-               +(1|DeerYear)
-               +(1|MumCode),
-               family = binomial(link = "logit"),data=FWS)
+                 +Sex
+                 +MotherStatus
+                 +MumAgeSquared
+                 +BirthWt
+                 +(1|DeerYear)
+                 +(1|MumCode),
+                 family = binomial(link = "logit"),data=FWS)
+Hinds
 
 Separate<-glmmTMB(FWSurvival~Hinds+Stags+Calves+Sex+MotherStatus+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
 Separate
 
-Adults<-glmmTMB(FWSurvival~Adults+Sex+MotherStatus+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+Adults<-glmmTMB(FWSurvival~S_Adults+Sex+MotherStatus+S_MumAgeSquared+S_BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
 Adults
 
 Total<-glmmTMB(FWSurvival~Total+Sex+MotherStatus+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
@@ -58,16 +64,98 @@ summary(LU_Total)
 
 AIC(Hinds,Adults,Total,LU_Total)
 
-Hinds_noWt<-glmmTMB(FWSurvival~Hinds+Sex+MotherStatus+MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+#Scaled
+S_Hinds<-glmmTMB(FWSurvival~S_Hinds
+               +Sex
+               +MotherStatus
+               +S_MumAgeSquared
+               +S_BirthWt
+               +(1|DeerYear)
+               +(1|MumCode),
+               family = binomial(link = "logit"),data=FWS)
+S_Hinds
+
+S_Adults<-glmmTMB(FWSurvival~S_Adults+Sex+MotherStatus+S_MumAgeSquared+S_BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+S_Adults
+
+
+S_Total<-glmmTMB(FWSurvival~S_Total+Sex+MotherStatus+S_MumAgeSquared+S_BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+S_Total
+
+S_LU_Total<-glmmTMB(FWSurvival~S_LU_Total+Sex+MotherStatus+S_MumAgeSquared+S_BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+S_LU_Total
+
+summary(S_Hinds)
+summary(S_Adults)
+summary(S_Total)
+summary(S_LU_Total)
+
+AIC(S_Hinds,S_Adults,S_Total,S_LU_Total)
+
+#glmer
+Hinds_glmer<-glmer(FWSurvival~Hinds
+               +Sex
+               +MotherStatus
+               +MumAgeSquared
+               +BirthWt
+               +(1|DeerYear)
+               +(1|MumCode),
+               family = binomial(link = "logit"),data=FWS)
+Hinds_glmer
+summary(Hinds_glmer)
+
+
+Adults_glmer<-glmer(FWSurvival~Adults+Sex+MotherStatus+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+Adults_glmer
+summary(Adults_glmer)
+
+
+Total_glmer<-glmer(FWSurvival~Total+Sex+MotherStatus+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+Total_glmer
+summary(Total_glmer)
+
+LU_Total_glmer<-glmer(FWSurvival~LU_Total+Sex+MotherStatus+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+LU_Total_glmer
+summary(LU_Total_glmer)
+
+AIC(Hinds_glmer,Adults_glmer,Total_glmer,LU_Total_glmer)
+
+#lmer scaled
+S_Hinds_glmer<-glmer(FWSurvival~S_Hinds
+                   +Sex
+                   +MotherStatus
+                   +S_MumAgeSquared
+                   +S_BirthWt
+                   +(1|DeerYear)
+                   +(1|MumCode),
+                   family = binomial(link = "logit"),data=FWS)
+summary(S_Hinds_glmer)
+
+
+S_Adults_glmer<-glmer(FWSurvival~S_Adults+Sex+MotherStatus+S_MumAgeSquared+S_BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+summary(S_Adults_glmer)
+
+
+S_Total_glmer<-glmer(FWSurvival~S_Total+Sex+MotherStatus+S_MumAgeSquared+S_BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+summary(S_Total_glmer)
+
+S_LU_Total_glmer<-glmer(FWSurvival~S_LU_Total+Sex+MotherStatus+S_MumAgeSquared+S_BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+summary(S_LU_Total_glmer)
+
+AIC(S_Hinds_glmer,S_Adults_glmer,S_Total_glmer,S_LU_Total_glmer)
+
+
+
+Hinds_noWt<-glmer(FWSurvival~Hinds+Sex+MotherStatus+MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
 Hinds_noWt
 
-Adults_noWt<-glmmTMB(FWSurvival~Adults+Sex+MotherStatus+MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+Adults_noWt<-glmer(FWSurvival~Adults+Sex+MotherStatus+MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
 Adults_noWt
 
-Total_noWt<-glmmTMB(FWSurvival~Total+Sex+MotherStatus+MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+Total_noWt<-glmer(FWSurvival~Total+Sex+MotherStatus+MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
 Total_noWt
 
-LU_Total_noWt<-glmmTMB(FWSurvival~LU_Total+Sex+MotherStatus+MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+LU_Total_noWt<-glmer(FWSurvival~LU_Total+Sex+MotherStatus+MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
 LU_Total_noWt
 
 summary(Hinds_noWt)
@@ -77,6 +165,43 @@ summary(LU_Total_noWt)
 
 AIC(Hinds_noWt,Adults_noWt,Total_noWt,LU_Total_noWt)
 
+#Scaled
+S_Hinds_noWt<-glmmTMB(FWSurvival~S_Hinds+Sex+MotherStatus+S_MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+S_Adults_noWt<-glmmTMB(FWSurvival~S_Adults+Sex+MotherStatus+S_MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+S_Total_noWt<-glmmTMB(FWSurvival~S_Total+Sex+MotherStatus+S_MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+S_LU_Total_noWt<-glmmTMB(FWSurvival~S_LU_Total+Sex+MotherStatus+S_MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+summary(S_Hinds_noWt)
+summary(S_Adults_noWt)
+summary(S_Total_noWt)
+summary(S_LU_Total_noWt)
+
+AIC(S_Hinds_noWt,S_Adults_noWt,S_Total_noWt,S_LU_Total_noWt)
+#Scaled glmer
+S_Hinds_noWt_glmer<-glmer(FWSurvival~S_Hinds+Sex+MotherStatus+S_MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+S_Adults_noWt_glmer<-glmer(FWSurvival~S_Adults+Sex+MotherStatus+S_MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+S_Total_noWt_glmer<-glmer(FWSurvival~S_Total+Sex+MotherStatus+S_MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+S_LU_Total_noWt_glmer<-glmer(FWSurvival~S_LU_Total+Sex+MotherStatus+S_MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+summary(S_Hinds_noWt_glmer)
+summary(S_Adults_noWt_glmer)
+summary(S_Total_noWt_glmer)
+summary(S_LU_Total_noWt_glmer)
+
+AIC(S_Hinds_noWt_glmer,S_Adults_noWt_glmer,S_Total_noWt_glmer,S_LU_Total_noWt_glmer)
+
+
+
+
+
+
+#sexed
 
 male_FWS<- FWS %>% filter(!Sex %in% c(1,3))
 fem_FWS<- FWS %>% filter(!Sex %in% c(2,3))
