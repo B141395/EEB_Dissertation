@@ -1,4 +1,4 @@
-DeerYear,PopN (Total),PopF+M (all adults),PopF+C (All females),Hinds,Stags,Calves,Calves_F,Calves_M,LU_Total,LU_F+M,LU_Hinds,LU_Stags,LU_Calves,F_Calves_ratio,M_Calves_ratio,
+DeerYear,PopN (Total),Adults,PopF+C (All females),Hinds,Stags,Calves,Calves_F,Calves_M,LU_Total,LU_F+M,LU_Hinds,LU_Stags,LU_Calves,F_Calves_ratio,M_Calves_ratio,
 1973,240,209,95,79,130,31,16,15,81.92,75.72,23.72,52,6.2,0.516,0.484,
 1974,244,202,112,90,112,42,22,20,80.23,71.83,27.03,44.8,8.4,0.524,0.476,
 1975,271,226,132,113,113,45,19,26,88.13,79.13,33.93,45.2,9,0.422,0.578,
