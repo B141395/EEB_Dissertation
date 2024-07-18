@@ -18,6 +18,10 @@ str(FWS)
 FWS <- FWS %>%
   left_join(PopD, by = "DeerYear")
 
+PopD80 <- PopD %>% filter(DeerYear > 1980)
+cor(PopD80[, c("Hinds", "Adults", "Total", "LU_Total")])
+
+
 cor(PopD[, c("Hinds", "Adults", "Total", "LU_Total")])
 
 cor(Density[, c("Total", "Adults", "Hinds", "Stags","Calves","Calves_M","Calves_F","LU_Total")])
@@ -167,6 +171,28 @@ summary(S_LU_Total_glmer)
 
 AIC(S_Hinds_glmer,S_Adults_glmer,S_Total_glmer,S_LU_Total_glmer)
 
+S_Hinds<-glmmTMB(FWSurvival~S_Hinds*Sex
+                 +MotherStatus
+               +S_MumAge
+               +S_MumAgeSquared
+               +S_BirthWt
+               +DeerYear
+               +(1|DeerYear)
+               +(1|MumCode),
+               family = binomial(link = "logit"),data=FWS)
+
+S_Adults<-glmmTMB(FWSurvival~S_Adults*Sex+MotherStatus+S_MumAge+S_MumAgeSquared+S_BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+S_Total<-glmmTMB(FWSurvival~S_Total*Sex+MotherStatus+S_MumAge+S_MumAgeSquared+S_BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+S_LU_Total<-glmmTMB(FWSurvival~S_LU_Total*Sex+MotherStatus+S_MumAge+S_MumAgeSquared+S_BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+summary(S_Hinds)
+summary(S_Adults)
+summary(S_Total)
+summary(S_LU_Total)
+
+
 
 #without weight
 Hinds_noWt<-glmmTMB(FWSurvival~Hinds+Sex+MotherStatus+MumAge+MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
@@ -214,6 +240,7 @@ summary(S_Total_noWt)
 summary(S_LU_Total_noWt)
 
 AIC(S_Hinds_noWt,S_Adults_noWt,S_Total_noWt,S_LU_Total_noWt)
+
 #Scaled glmer
 S_Hinds_noWt_glmer<-glmer(FWSurvival~S_Hinds+Sex+MotherStatus+S_MumAge+S_MumAgeSquared+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
 
@@ -231,9 +258,44 @@ summary(S_LU_Total_noWt_glmer)
 AIC(S_Hinds_noWt_glmer,S_Adults_noWt_glmer,S_Total_noWt_glmer,S_LU_Total_noWt_glmer)
 
 
+#year as linear
+yr_S_Hinds_noWt<-glmmTMB(FWSurvival~S_Hinds+Sex+MotherStatus+S_MumAge+S_MumAgeSquared+DeerYear+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
 
+yr_S_Adults_noWt<-glmmTMB(FWSurvival~S_Adults+Sex+MotherStatus+S_MumAge+S_MumAgeSquared+DeerYear+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
 
+yr_S_Total_noWt<-glmmTMB(FWSurvival~S_Total+Sex+MotherStatus+S_MumAge+S_MumAgeSquared+DeerYear+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
 
+yr_S_LU_Total_noWt<-glmmTMB(FWSurvival~S_LU_Total+Sex+MotherStatus+S_MumAge+S_MumAgeSquared+DeerYear+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+summary(yr_S_Hinds_noWt)
+summary(yr_S_Adults_noWt)
+summary(yr_S_Total_noWt)
+summary(yr_S_LU_Total_noWt)
+
+AIC(S_Hinds_noWt,S_Adults_noWt,S_Total_noWt,S_LU_Total_noWt)
+
+#year linear with weight
+yr_S_Hinds<-glmmTMB(FWSurvival~S_Hinds
+                 +Sex
+                 +MotherStatus
+                 +S_MumAge
+                 +S_MumAgeSquared
+                 +S_BirthWt
+                 +DeerYear
+                 +(1|DeerYear)
+                 +(1|MumCode),
+                 family = binomial(link = "logit"),data=FWS)
+
+yr_S_Adults<-glmmTMB(FWSurvival~S_Adults+Sex+MotherStatus+S_MumAge+S_MumAgeSquared+S_BirthWt+DeerYear+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+yr_S_Total<-glmmTMB(FWSurvival~S_Total+Sex+MotherStatus+S_MumAge+S_MumAgeSquared+S_BirthWt+DeerYear+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+yr_S_LU_Total<-glmmTMB(FWSurvival~S_LU_Total+Sex+MotherStatus+S_MumAge+S_MumAgeSquared+S_BirthWt+DeerYear+(1|DeerYear)+(1|MumCode),family = binomial,data=FWS)
+
+summary(yr_S_Hinds)
+summary(yr_S_Adults)
+summary(yr_S_Total)
+summary(yr_S_LU_Total)
 
 #sexed
 
@@ -356,78 +418,128 @@ fem_rate<-fem_FWS %>%
   left_join(PopD, by = "DeerYear")
 
 #Total
+
+ggplot(rate, aes(x = DeerYear, y = rate)) +
+  geom_point()+
+  geom_smooth(method = "lm",color = "black", size = 0.75) +
+  labs(title="First Winter Survival Rate over Year")+
+  ylab("First Winter Survival Rate") + xlab("Year")+
+  theme_minimal() +
+  geom_text(aes(y = rate+ 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") 
+
+
 ggplot(rate, aes(x = Hinds, y = rate)) +
   geom_point()+
-  geom_smooth(method = "lm", se = FALSE, color = "blue") +
-  ylab("First Winter Survival Rate") + xlab("Number of Hinds")
-
+  geom_smooth(method = "lm",color = "black", size = 0.75) +
+  labs(title="First Winter Survival Rate over Density")+
+  ylab("First Winter Survival Rate") + xlab("Number of Hinds")+
+  theme_minimal() +
+  geom_text(aes(y = rate+ 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") 
 
 ggplot(rate, aes(x = Adults, y = rate)) +
   geom_point()+
-  geom_smooth(method = "lm", se = FALSE, color = "blue")+
-  ylab("First Winter Survival Rate") + xlab("Number of Hinds and Stags")
-
+  geom_smooth(method = "lm",color = "black", size = 0.75) +
+  labs(title="First Winter Survival Rate over Density")+
+  ylab("First Winter Survival Rate") + xlab("Number of Hinds and Stags")+
+  theme_minimal() +
+  geom_text(aes(y = rate+ 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") 
 
 ggplot(rate, aes(x = Total, y = rate)) +
   geom_point()+
-  geom_smooth(method = "lm", se = FALSE, color = "blue")+
-  ylab("First Winter Survival Rate") + xlab("Number of Hinds, Stags and Calves")
-
+  geom_smooth(method = "lm",color = "black", size = 0.75) +
+  labs(title="First Winter Survival Rate over Density")+
+  ylab("First Winter Survival Rate") + xlab("Number of Hinds, Stags and Calves")+
+  theme_minimal() +
+  geom_text(aes(y = rate+ 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") 
 
 ggplot(rate, aes(x = LU_Total, y = rate)) +
   geom_point()+
-  geom_smooth(method = "lm", se = FALSE, color = "blue")+
-  ylab("First Winter Survival Rate") + xlab("Livestock Unit")
-
+  geom_smooth(method = "lm",color = "black", size = 0.75) +
+  labs(title="First Winter Survival Rate over Density")+
+  ylab("First Winter Survival Rate") + xlab("Livestock Unit")+
+  theme_minimal() +
+  geom_text(aes(y = rate+ 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") 
 
 #Fem calves
 
 ggplot(fem_rate, aes(x = Hinds, y = rate)) +
   geom_point()+
-  geom_smooth(method = "lm", se = FALSE, color = "blue")+
-  ylab("Female First Winter Survival Rate") + xlab("Number of Hinds")
+  geom_smooth(method = "lm",color = "black", size = 0.75) +
+  labs(title="Female First Winter Survival Rate over Density")+
+  ylab("Female First Winter Survival Rate") + xlab("Number of Hinds")+
+  theme_minimal() +
+  geom_text(aes(y = rate+ 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") 
+
 
 
 ggplot(fem_rate, aes(x = Adults, y = rate)) +
   geom_point()+
-  geom_smooth(method = "lm", se = FALSE, color = "blue")+
-  ylab("Female First Winter Survival Rate") + xlab("Number of Hinds and Stags")
+  geom_smooth(method = "lm",color = "black", size = 0.75) +
+  labs(title="Female First Winter Survival Rate over Density")+
+  ylab("Female First Winter Survival Rate") + xlab("Number of Hinds and Stags")+
+  theme_minimal() +
+  geom_text(aes(y = rate+ 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") 
+
 
 
 ggplot(fem_rate, aes(x = Total, y = rate)) +
   geom_point()+
-  geom_smooth(method = "lm", se = FALSE, color = "blue")+
-  ylab("Female First Winter Survival Rate") + xlab("Number of Hinds, Stags and Calves")
+  geom_smooth(method = "lm",color = "black", size = 0.75) +
+  labs(title="Female First Winter Survival Rate over Density")+
+  ylab("Female First Winter Survival Rate") + xlab("Number of Hinds, Stags and Calves")+
+  theme_minimal() +
+  geom_text(aes(y = rate+ 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") 
+
 
 
 
 ggplot(fem_rate, aes(x = LU_Total, y = rate)) +
   geom_point()+
-  geom_smooth(method = "lm", se = FALSE, color = "blue")+
-  ylab("Female First Winter Survival Rate") + xlab("Livestock Unit")
+  geom_smooth(method = "lm",color = "black", size = 0.75) +
+  labs(title="Female First Winter Survival Rate over Density")+
+  ylab("Female First Winter Survival Rate") + xlab("Livestock Unit")+
+  theme_minimal() +
+  geom_text(aes(y = rate+ 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") 
+
 
 
 #Male calves
 ggplot(male_rate, aes(x = Hinds, y = rate)) +
   geom_point()+
-  geom_smooth(method = "lm", se = FALSE, color = "blue")+
-  ylab("Male First Winter Survival Rate") + xlab("Number of Hinds")
+  geom_smooth(method = "lm",color = "black", size = 0.75) +
+  labs(title="Male First Winter Survival Rate over Density")+
+  ylab("Male First Winter Survival Rate") + xlab("Number of Hinds")+
+  theme_minimal() +
+  geom_text(aes(y = rate+ 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") 
+
 
 
 ggplot(male_rate, aes(x = Adults, y = rate)) +
   geom_point()+
-  geom_smooth(method = "lm", se = FALSE, color = "blue")+
-  ylab("Male First Winter Survival Rate") + xlab("Number of Hinds and Stags")
+  geom_smooth(method = "lm",color = "black", size = 0.75) +
+  labs(title="Male First Winter Survival Rate over Density")+
+  ylab("Male First Winter Survival Rate") + xlab("Number of Hinds and Stags")+
+  theme_minimal() +
+  geom_text(aes(y = rate+ 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") 
+
 
 
 ggplot(male_rate, aes(x = Total, y = rate)) +
   geom_point()+
-  geom_smooth(method = "lm", se = FALSE, color = "blue")+
-  ylab("Male First Winter Survival Rate") + xlab("Number of Hinds, Stags and Calves")
+  geom_smooth(method = "lm",color = "black", size = 0.75) +
+  labs(title="Male First Winter Survival Rate over Density")+
+  ylab("Male First Winter Survival Rate") + xlab("Number of Hinds, Stags and Calves")+
+  theme_minimal() +
+  geom_text(aes(y = rate+ 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") 
+
 
 
 ggplot(male_rate, aes(x = LU_Total, y = rate)) +
   geom_point()+
-  geom_smooth(method = "lm", se = FALSE, color = "blue")+
-  ylab("Male First Winter Survival Rate") + xlab("Livestock Unit")
+  geom_smooth(method = "lm",color = "black", size = 0.75) +
+  labs(title="Male First Winter Survival Rate over Density")+
+  ylab("Male First Winter Survival Rate") + xlab("Livestock Unit")+
+  theme_minimal() +
+  geom_text(aes(y = rate+ 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") 
+
 
