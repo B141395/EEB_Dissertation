@@ -371,7 +371,7 @@ library(ggeffects)
 
 # Generate predictions
 
-rate_filtered <- rate %>% select (DeerYear,rate,Hinds)
+rate_filtered <- rate %>% select (DeerYear,rate,Hinds,Adults,Total,LU_Total)
 
 pred_Hinds <- ggpredict(Hinds, terms = "Hinds [all]")
 pred_yr_Hinds <- ggpredict(yr_Hinds, terms = "Hinds [all]")
@@ -424,7 +424,178 @@ ggplot(combined_data, aes(x = x, y = rate)) +
 
 
 
-#more plots
+#Adult Plots
+
+pred_Adults <- ggpredict(Adults, terms = "Adults [all]")
+pred_yr_Adults <- ggpredict(yr_Adults, terms = "Adults [all]")
+
+pred_Adults$Adults <- pred_Adults$x
+pred_yr_Adults$Adults <- pred_yr_Adults$x
+
+pred_Adults<- pred_Adults %>% left_join(rate_filtered, by= "Adults")
+pred_yr_Adults<- pred_yr_Adults %>% left_join(rate_filtered, by= "Adults")
+
+# Convert to data frames
+df_Adults <- as.data.frame(pred_Adults)
+df_yr_Adults <- as.data.frame(pred_yr_Adults)
+
+# Add a Type column to differentiate the data sets with descriptive labels
+df_Adults$Type <- "Without Year as Fixed Effect"
+df_yr_Adults$Type <- "With Year as Fixed Effect"
+
+# Combine the data frames
+combined_Adults <- rbind(df_Adults, df_yr_Adults)
+
+# Keep only unique points for plotting
+unique_Adults <- combined_Adults %>%
+  distinct(Adults, rate, .keep_all = TRUE)
+
+ggplot(combined_Adults, aes(x = x, y = rate)) +
+  geom_point(data = unique_Adults, aes(y = rate)) +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "Adults Density",
+    y = "Predicted Survival Probability",
+    title = "Predicted Survival Probability over Density\nwith 95% Confidence Interval"
+  ) +
+  scale_color_manual(values = c("With Year as Fixed Effect" = "blue", "Without Year as Fixed Effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed Effect" = "lightblue", "Without Year as Fixed Effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",  # Position the legend at the bottom
+    legend.title = element_blank()  # Optionally remove the legend title
+  )
+
+#Total Plots
+pred_Adults <- ggpredict(Adults, terms = "Adults [all]")
+pred_yr_Adults <- ggpredict(yr_Adults, terms = "Adults [all]")
+
+pred_Adults$Adults <- pred_Adults$x
+pred_yr_Adults$Adults <- pred_yr_Adults$x
+
+pred_Adults<- pred_Adults %>% left_join(rate_filtered, by= "Adults")
+pred_yr_Adults<- pred_yr_Adults %>% left_join(rate_filtered, by= "Adults")
+
+# Convert to data frames
+df_Adults <- as.data.frame(pred_Adults)
+df_yr_Adults <- as.data.frame(pred_yr_Adults)
+
+# Add a Type column to differentiate the data sets with descriptive labels
+df_Adults$Type <- "Without Year as Fixed Effect"
+df_yr_Adults$Type <- "With Year as Fixed Effect"
+
+# Combine the data frames
+combined_Adults <- rbind(df_Adults, df_yr_Adults)
+
+# Keep only unique points for plotting
+unique_Adults <- combined_Adults %>%
+  distinct(Adults, rate, .keep_all = TRUE)
+
+ggplot(combined_Adults, aes(x = x, y = rate)) +
+  geom_point(data = unique_Adults, aes(y = rate)) +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "Adults Density",
+    y = "Predicted Survival Probability",
+    title = "Predicted Survival Probability over Density\nwith 95% Confidence Interval"
+  ) +
+  scale_color_manual(values = c("With Year as Fixed Effect" = "blue", "Without Year as Fixed Effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed Effect" = "lightblue", "Without Year as Fixed Effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",  # Position the legend at the bottom
+    legend.title = element_blank()  # Optionally remove the legend title
+  )
+
+#Total Plots
+pred_Total <- ggpredict(Total, terms = "Total [all]")
+pred_yr_Total <- ggpredict(yr_Total, terms = "Total [all]")
+
+pred_Total$Total <- pred_Total$x
+pred_yr_Total$Total <- pred_yr_Total$x
+
+pred_Total<- pred_Total %>% left_join(rate_filtered, by= "Total")
+pred_yr_Total<- pred_yr_Total %>% left_join(rate_filtered, by= "Total")
+
+# Convert to data frames
+df_Total <- as.data.frame(pred_Total)
+df_yr_Total <- as.data.frame(pred_yr_Total)
+
+# Add a Type column to differentiate the data sets with descriptive labels
+df_Total$Type <- "Without Year as Fixed Effect"
+df_yr_Total$Type <- "With Year as Fixed Effect"
+
+# Combine the data frames
+combined_Total <- rbind(df_Total, df_yr_Total)
+
+# Keep only unique points for plotting
+unique_Total <- combined_Total %>%
+  distinct(Total, rate, .keep_all = TRUE)
+
+ggplot(combined_Total, aes(x = x, y = rate)) +
+  geom_point(data = unique_Total, aes(y = rate)) +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "Total Density",
+    y = "Predicted Survival Probability",
+    title = "Predicted Survival Probability over Density\nwith 95% Confidence Interval"
+  ) +
+  scale_color_manual(values = c("With Year as Fixed Effect" = "blue", "Without Year as Fixed Effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed Effect" = "lightblue", "Without Year as Fixed Effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",  # Position the legend at the bottom
+    legend.title = element_blank()  # Optionally remove the legend title
+  )
+
+
+#LU_Total Plots
+pred_LU_Total <- ggpredict(LU_Total, terms = "LU_Total [all]")
+pred_yr_LU_Total <- ggpredict(yr_LU_Total, terms = "LU_Total [all]")
+
+pred_LU_Total$LU_Total <- pred_LU_Total$x
+pred_yr_LU_Total$LU_Total <- pred_yr_LU_Total$x
+
+pred_LU_Total<- pred_LU_Total %>% left_join(rate_filtered, by= "LU_Total")
+pred_yr_LU_Total<- pred_yr_LU_Total %>% left_join(rate_filtered, by= "LU_Total")
+
+# Convert to data frames
+df_LU_Total <- as.data.frame(pred_LU_Total)
+df_yr_LU_Total <- as.data.frame(pred_yr_LU_Total)
+
+# Add a Type column to differentiate the data sets with descriptive labels
+df_LU_Total$Type <- "Without Year as Fixed Effect"
+df_yr_LU_Total$Type <- "With Year as Fixed Effect"
+
+# Combine the data frames
+combined_LU_Total <- rbind(df_LU_Total, df_yr_LU_Total)
+
+# Keep only unique points for plotting
+unique_LU_Total <- combined_LU_Total %>%
+  distinct(LU_Total, rate, .keep_all = TRUE)
+
+ggplot(combined_LU_Total, aes(x = x, y = rate)) +
+  geom_point(data = unique_LU_Total, aes(y = rate)) +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "LU_Total Density",
+    y = "Predicted Survival Probability",
+    title = "Predicted Survival Probability over Density\nwith 95% Confidence Interval"
+  ) +
+  scale_color_manual(values = c("With Year as Fixed Effect" = "blue", "Without Year as Fixed Effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed Effect" = "lightblue", "Without Year as Fixed Effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",  # Position the legend at the bottom
+    legend.title = element_blank()  # Optionally remove the legend title
+  )
+
+
+
 
 FWS_pred<-FWS
 
