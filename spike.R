@@ -16,6 +16,7 @@ birth_w_wt$DeerYear<-birth_w_wt$DeerYear-1
 
 Density<-read.csv("Population_estimate_calculations.csv")
 
+
 Spike<-Spike%>% filter(!DeerYear %in% c(1969))
 
 nowt<-nowt%>% filter(!DeerYear %in% c(1969))
@@ -74,6 +75,8 @@ rate_spike<-rate_spike %>% select(DeerYear,rate)
 
 Spike <- Spike %>%
   left_join(PopD, by = "DeerYear")
+
+Spike<-na.omit(Spike)
 
 Spike <- Spike %>%
   left_join(rate_spike, by = "DeerYear")
@@ -210,11 +213,7 @@ ggplot(data = Avg_nowt, aes(x = LU_Total, y = mean_spike)) +
   geom_text(aes(y = mean_spike+ 0.1, label = paste0("(", DeerYear, ")")), size = 2, color = "black") 
 
 
-Hinds_spike<-glmmTMB(AvgSpike~Hinds
-                            +BirthWt
-                            +(1|DeerYear)
-                            +(1|MumCode),data=Spike)
-summary(Hinds_spike)
+
 
 
 SpikeByYear<-glm(mean_spike~Hinds,data=AvgSpike)
@@ -310,28 +309,87 @@ summary(Total_spike)
 summary(LU_Total_spike)
 
 
-# Remove non-finite values from the Adults column
-Spike_filtered <- Spike %>%
-  filter(is.finite(Adults))
+library(ggeffects)
 
-# Generate new data for prediction
-new_data <- expand.grid(
-  Adults = seq(min(Spike_filtered$Adults), max(Spike_filtered$Adults), length.out = 100),
-  DeerYear = unique(Spike_filtered$DeerYear),
-  BirthWt = mean(Spike_filtered$BirthWt, na.rm = TRUE)  # Ensure BirthWt is finite as well
+AvgSpike_filtered <- AvgSpike %>% select(DeerYear, mean_spike,sample_size,se_spike)
+
+Spike_pred <- Spike %>% left_join(AvgSpike_filtered, by = "DeerYear")
+
+predictions_1 <- ggpredict(Hinds_spike, terms = "Hinds [all]")
+
+predictions_1$Hinds <- predictions_1$x
+
+predictions_2 <- ggpredict(Hinds_spike_simple, terms = "Hinds [all]")
+predictions_2$Hinds <- predictions_2$x
+
+
+Spike_pred_yr <- Spike_pred %>% left_join(predictions_1, by = "Hinds")
+
+Spike_pred_noyr <- Spike_pred %>% left_join(predictions_2, by = "Hinds")
+
+ggplot(Spike_pred_yr, aes(x = Hinds, y = mean_spike)) +
+  geom_point()+
+  geom_line(aes(y= predicted),color = "blue") +  # Predicted values
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2, fill = "lightblue") +  # Confidence interval
+  labs(
+    x = "Hinds",
+    y = "Predicted Average Spike",
+    title = "Predicted Average Spike with 95% Confidence Interval"
+  ) +
+  theme_minimal()
+
+ggplot(Spike_pred_noyr, aes(x = Hinds, y = mean_spike)) +
+  geom_point()+
+  geom_line(aes(y= predicted),color = "red") +  # Predicted values
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2, fill = "lightpink") +  # Confidence interval
+  labs(
+    x = "Hinds",
+    y = "Predicted Average Spike",
+    title = "Predicted Average Spike with 95% Confidence Interval"
+  ) +
+  theme_minimal()
+
+
+#With & Without Year models for Hinds
+
+# Assume Spike_pred_yr and Spike_pred_noyr are already available and structured similarly
+
+# Add a Type column to differentiate the data sets
+Spike_pred_yr$Type <- "With Year as Fixed effect"
+Spike_pred_noyr$Type <- "Without Year as Fixed effect"
+
+# Combine the data frames
+combined_data <- rbind(
+  Spike_pred_yr,
+  Spike_pred_noyr
 )
 
-# Generate predictions
-new_data$AvgSpike_pred <- predict(Adults_spike, newdata = new_data, re.form = NA)
+# Keep only unique points for plotting
+unique_points <- combined_data %>%
+  distinct(Hinds, mean_spike, .keep_all = TRUE)
+
+
+# Plot the combined data
+ggplot(combined_data, aes(x = Hinds, y = mean_spike)) +
+  geom_point(data = unique_points) +
+  geom_text(data = unique_points, aes(y = mean_spike + 0.1, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "Hind Density",
+    y = "Mean Yearling Antler Length (inches)",
+    title = "Predicted Mean Yearling Antler Length over Density\nwith 95% Confidence Interval"
+  ) +
+  scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",  # Position the legend at the bottom
+    legend.title = element_blank()  # Optionally remove the legend title
+  )
 
 
 
-# Plot the actual data and the model's predictions
-ggplot(data = Spike, aes(x = Adults, y = AvgSpike)) +
-  geom_point(alpha = 0.5) +  # Plot the actual data points
-  geom_line(data = new_data, aes(x = Adults, y = AvgSpike_pred), color = "blue") +  # Add the prediction line
-  labs(title = "Model Fit of AvgSpike vs Adults", x = "Number of Adults", y = "Average Spike Length") +
-  theme_minimal()
 
 
 Hinds_spike96<-glmmTMB(AvgSpike~Hinds
