@@ -223,6 +223,21 @@ SpikeByYear96<-glm(mean_spike~Hinds,data=AvgSpike96)
 summary(SpikeByYear96)
 
 
+
+Spike_noden<-glmmTMB(AvgSpike~BirthWt
+                            +DeerYear
+                            +(1|DeerYear)
+                            +(1|MumCode),data=Spike)
+
+summary(Spike_noden)
+
+
+Spike_noyr_noden<-glmmTMB(AvgSpike~BirthWt
+                     +(1|DeerYear)
+                     +(1|MumCode),data=Spike)
+
+summary(Spike_noyr_noden)
+
 Hinds_spike_simple<-glmmTMB(AvgSpike~Hinds
                +BirthWt
                +(1|DeerYear)
@@ -315,17 +330,17 @@ AvgSpike_filtered <- AvgSpike %>% select(DeerYear, mean_spike,sample_size,se_spi
 
 Spike_pred <- Spike %>% left_join(AvgSpike_filtered, by = "DeerYear")
 
-predictions_1 <- ggpredict(Hinds_spike, terms = "Hinds [all]")
+predictions_Hinds_yr <- ggpredict(Hinds_spike, terms = "Hinds [all]")
 
-predictions_1$Hinds <- predictions_1$x
+predictions_Hinds_yr$Hinds <- predictions_Hinds_yr$x
 
-predictions_2 <- ggpredict(Hinds_spike_simple, terms = "Hinds [all]")
-predictions_2$Hinds <- predictions_2$x
+predictions_Hinds_noyr <- ggpredict(Hinds_spike_simple, terms = "Hinds [all]")
+predictions_Hinds_noyr$Hinds <- predictions_Hinds_noyr$x
 
 
-Spike_pred_yr <- Spike_pred %>% left_join(predictions_1, by = "Hinds")
+Spike_pred_Hinds_yr <- Spike_pred %>% left_join(predictions_Hinds_yr, by = "Hinds")
 
-Spike_pred_noyr <- Spike_pred %>% left_join(predictions_2, by = "Hinds")
+Spike_pred_Hinds_noyr <- Spike_pred %>% left_join(predictions_Hinds_noyr, by = "Hinds")
 
 ggplot(Spike_pred_yr, aes(x = Hinds, y = mean_spike)) +
   geom_point()+
@@ -355,24 +370,24 @@ ggplot(Spike_pred_noyr, aes(x = Hinds, y = mean_spike)) +
 # Assume Spike_pred_yr and Spike_pred_noyr are already available and structured similarly
 
 # Add a Type column to differentiate the data sets
-Spike_pred_yr$Type <- "With Year as Fixed effect"
-Spike_pred_noyr$Type <- "Without Year as Fixed effect"
+Spike_pred_Hinds_yr$Type <- "With Year as Fixed effect"
+Spike_pred_Hinds_noyr$Type <- "Without Year as Fixed effect"
 
 # Combine the data frames
-combined_data <- rbind(
-  Spike_pred_yr,
-  Spike_pred_noyr
+combined_spike_Hinds <- rbind(
+  Spike_pred_Hinds_yr,
+  Spike_pred_Hinds_noyr
 )
 
 # Keep only unique points for plotting
-unique_points <- combined_data %>%
+unique_spike_Hinds <- combined_spike_Hinds %>%
   distinct(Hinds, mean_spike, .keep_all = TRUE)
 
 
 # Plot the combined data
-ggplot(combined_data, aes(x = Hinds, y = mean_spike)) +
-  geom_point(data = unique_points) +
-  geom_text(data = unique_points, aes(y = mean_spike + 0.1, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
+ggplot(combined_spike_Hinds, aes(x = Hinds, y = mean_spike)) +
+  geom_point(data = unique_spike_Hinds) +
+  geom_text(data = unique_spike_Hinds, aes(y = mean_spike + 0.1, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
   geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
   labs(
@@ -388,8 +403,159 @@ ggplot(combined_data, aes(x = Hinds, y = mean_spike)) +
     legend.title = element_blank()  # Optionally remove the legend title
   )
 
+#adults----
+predictions_Adults_yr <- ggpredict(Adults_spike, terms = "Adults [all]")
+
+predictions_Adults_yr$Adults <- predictions_Adults_yr$x
+
+predictions_Adults_noyr <- ggpredict(Adults_spike_simple, terms = "Adults [all]")
+predictions_Adults_noyr$Adults <- predictions_Adults_noyr$x
 
 
+Spike_pred_Adults_yr <- Spike_pred %>% left_join(predictions_Adults_yr, by = "Adults")
+
+Spike_pred_Adults_noyr <- Spike_pred %>% left_join(predictions_Adults_noyr, by = "Adults")
+
+# Add a Type column to differentiate the data sets
+Spike_pred_Adults_yr$Type <- "With Year as Fixed effect"
+Spike_pred_Adults_noyr$Type <- "Without Year as Fixed effect"
+
+# Combine the data frames
+combined_spike_Adults <- rbind(
+  Spike_pred_Adults_yr,
+  Spike_pred_Adults_noyr
+)
+
+# Keep only unique points for plotting
+unique_spike_Adults <- combined_spike_Adults %>%
+  distinct(Adults, mean_spike, .keep_all = TRUE)
+
+
+# Plot the combined data
+ggplot(combined_spike_Adults, aes(x = Adults, y = mean_spike)) +
+  geom_point(data = unique_spike_Adults) +
+  geom_text(data = unique_spike_Adults, aes(y = mean_spike + 0.1, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "Adults Density",
+    y = "Mean Yearling Antler Length (inches)",
+    title = "Predicted Mean Yearling Antler Length over Density\nwith 95% Confidence Interval"
+  ) +
+  scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",  # Position the legend at the bottom
+    legend.title = element_blank()  # Optionally remove the legend title
+  )
+
+
+
+#total----
+predictions_Total_yr <- ggpredict(Total_spike, terms = "Total [all]")
+
+predictions_Total_yr$Total <- predictions_Total_yr$x
+
+predictions_Total_noyr <- ggpredict(Total_spike_simple, terms = "Total [all]")
+predictions_Total_noyr$Total <- predictions_Total_noyr$x
+
+
+Spike_pred_Total_yr <- Spike_pred %>% left_join(predictions_Total_yr, by = "Total")
+
+Spike_pred_Total_noyr <- Spike_pred %>% left_join(predictions_Total_noyr, by = "Total")
+
+# Add a Type column to differentiate the data sets
+Spike_pred_Total_yr$Type <- "With Year as Fixed effect"
+Spike_pred_Total_noyr$Type <- "Without Year as Fixed effect"
+
+# Combine the data frames
+combined_spike_Total <- rbind(
+  Spike_pred_Total_yr,
+  Spike_pred_Total_noyr
+)
+
+# Keep only unique points for plotting
+unique_spike_Total <- combined_spike_Total %>%
+  distinct(Total, mean_spike, .keep_all = TRUE)
+
+
+# Plot the combined data
+ggplot(combined_spike_Total, aes(x = Total, y = mean_spike)) +
+  geom_point(data = unique_spike_Total) +
+  geom_text(data = unique_spike_Total, aes(y = mean_spike + 0.1, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "Total Density",
+    y = "Mean Yearling Antler Length (inches)",
+    title = "Predicted Mean Yearling Antler Length over Density\nwith 95% Confidence Interval"
+  ) +
+  scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",  # Position the legend at the bottom
+    legend.title = element_blank()  # Optionally remove the legend title
+  )
+
+
+#LU_total----
+predictions_LU_Total_yr <- ggpredict(LU_Total_spike, terms = "LU_Total [all]")
+
+predictions_LU_Total_yr$LU_Total <- predictions_LU_Total_yr$x
+
+predictions_LU_Total_noyr <- ggpredict(LU_Total_spike_simple, terms = "LU_Total [all]")
+predictions_LU_Total_noyr$LU_Total <- predictions_LU_Total_noyr$x
+
+
+Spike_pred_LU_Total_yr <- Spike_pred %>% left_join(predictions_LU_Total_yr, by = "LU_Total")
+
+Spike_pred_LU_Total_noyr <- Spike_pred %>% left_join(predictions_LU_Total_noyr, by = "LU_Total")
+
+# Add a Type column to differentiate the data sets
+Spike_pred_LU_Total_yr$Type <- "With Year as Fixed effect"
+Spike_pred_LU_Total_noyr$Type <- "Without Year as Fixed effect"
+
+# Combine the data frames
+combined_spike_LU_Total <- rbind(
+  Spike_pred_LU_Total_yr,
+  Spike_pred_LU_Total_noyr
+)
+
+# Keep only unique points for plotting
+unique_spike_LU_Total <- combined_spike_LU_Total %>%
+  distinct(LU_Total, mean_spike, .keep_all = TRUE)
+
+
+# Plot the combined data
+ggplot(combined_spike_LU_Total, aes(x = LU_Total, y = mean_spike)) +
+  geom_point(data = unique_spike_LU_Total) +
+  geom_text(data = unique_spike_LU_Total, aes(y = mean_spike + 0.1, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "LU_Total Density",
+    y = "Mean Yearling Antler Length (inches)",
+    title = "Predicted Mean Yearling Antler Length over Density\nwith 95% Confidence Interval"
+  ) +
+  scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",  # Position the legend at the bottom
+    legend.title = element_blank()  # Optionally remove the legend title
+  )
+
+
+print(predictions_Hinds_noyr)
+print(predictions_Hinds_yr)
+print(predictions_Adults_noyr)
+print(predictions_Adults_yr)
+print(predictions_Total_noyr)
+print(predictions_Total_yr)
+print(predictions_LU_Total_noyr)
+print(predictions_LU_Total_yr)
 
 
 Hinds_spike96<-glmmTMB(AvgSpike~Hinds

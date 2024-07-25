@@ -104,7 +104,28 @@ summary(yr_Adults)
 summary(yr_Total)
 summary(yr_LU_Total)
 
+yr_noden<-glmmTMB(FWSurvival~Sex
+                  +MotherStatus
+                  +MumAge
+                  +MumAgeSquared
+                  +BirthWt
+                  +DeerYear
+                  +(1|DeerYear)
+                  +(1|MumCode),
+                  family = binomial(link = "logit"),data=FWS)
 
+summary(yr_noden)
+
+noyr_noden<-glmmTMB(FWSurvival~Sex
+                  +MotherStatus
+                  +MumAge
+                  +MumAgeSquared
+                  +BirthWt
+                  +(1|DeerYear)
+                  +(1|MumCode),
+                  family = binomial(link = "logit"),data=FWS)
+
+summary(noyr_noden)
 
 #sexed
 
@@ -371,7 +392,10 @@ library(ggeffects)
 
 # Generate predictions
 
-rate_filtered <- rate %>% select (DeerYear,rate,Hinds,Adults,Total,LU_Total)
+rate_filtered <- rate %>% select (DeerYear,rate)
+
+FWS_pred<-FWS %>% left_join(rate_filtered, by="DeerYear")
+  
 
 pred_Hinds <- ggpredict(Hinds, terms = "Hinds [all]")
 pred_yr_Hinds <- ggpredict(yr_Hinds, terms = "Hinds [all]")
@@ -379,7 +403,6 @@ pred_yr_Hinds <- ggpredict(yr_Hinds, terms = "Hinds [all]")
 pred_Hinds$Hinds <- pred_Hinds$x
 pred_yr_Hinds$Hinds <- pred_yr_Hinds$x
 
-summary(FWS)
 
 print(pred_Hinds)
 
@@ -387,8 +410,8 @@ print(pred_yr_Hinds)
 
 
 
-pred_Hinds<- pred_Hinds %>% left_join(rate_filtered, by= "Hinds")
-pred_yr_Hinds<- pred_yr_Hinds %>% left_join(rate_filtered, by= "Hinds")
+pred_Hinds<- pred_Hinds %>% left_join(FWS_pred, by= "Hinds")
+pred_yr_Hinds<- pred_yr_Hinds %>% left_join(FWS_pred, by= "Hinds")
 
 # Convert to data frames
 df_Hinds <- as.data.frame(pred_Hinds)
@@ -407,6 +430,8 @@ unique_points <- combined_data %>%
 
 ggplot(combined_data, aes(x = x, y = rate)) +
   geom_point(data = unique_points, aes(y = rate)) +
+  geom_jitter(aes(y=FWSurvival),width = 0.1, height = 0.1) +
+  geom_text(data = unique_points, aes(y = rate + 0.1, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
   geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
   labs(
@@ -432,8 +457,8 @@ pred_yr_Adults <- ggpredict(yr_Adults, terms = "Adults [all]")
 pred_Adults$Adults <- pred_Adults$x
 pred_yr_Adults$Adults <- pred_yr_Adults$x
 
-pred_Adults<- pred_Adults %>% left_join(rate_filtered, by= "Adults")
-pred_yr_Adults<- pred_yr_Adults %>% left_join(rate_filtered, by= "Adults")
+pred_Adults<- pred_Adults %>% left_join(FWS_pred, by= "Adults")
+pred_yr_Adults<- pred_yr_Adults %>% left_join(FWS_pred, by= "Adults")
 
 # Convert to data frames
 df_Adults <- as.data.frame(pred_Adults)
@@ -467,47 +492,6 @@ ggplot(combined_Adults, aes(x = x, y = rate)) +
     legend.title = element_blank()  # Optionally remove the legend title
   )
 
-#Total Plots
-pred_Adults <- ggpredict(Adults, terms = "Adults [all]")
-pred_yr_Adults <- ggpredict(yr_Adults, terms = "Adults [all]")
-
-pred_Adults$Adults <- pred_Adults$x
-pred_yr_Adults$Adults <- pred_yr_Adults$x
-
-pred_Adults<- pred_Adults %>% left_join(rate_filtered, by= "Adults")
-pred_yr_Adults<- pred_yr_Adults %>% left_join(rate_filtered, by= "Adults")
-
-# Convert to data frames
-df_Adults <- as.data.frame(pred_Adults)
-df_yr_Adults <- as.data.frame(pred_yr_Adults)
-
-# Add a Type column to differentiate the data sets with descriptive labels
-df_Adults$Type <- "Without Year as Fixed Effect"
-df_yr_Adults$Type <- "With Year as Fixed Effect"
-
-# Combine the data frames
-combined_Adults <- rbind(df_Adults, df_yr_Adults)
-
-# Keep only unique points for plotting
-unique_Adults <- combined_Adults %>%
-  distinct(Adults, rate, .keep_all = TRUE)
-
-ggplot(combined_Adults, aes(x = x, y = rate)) +
-  geom_point(data = unique_Adults, aes(y = rate)) +
-  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
-  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
-  labs(
-    x = "Adults Density",
-    y = "Predicted Survival Probability",
-    title = "Predicted Survival Probability over Density\nwith 95% Confidence Interval"
-  ) +
-  scale_color_manual(values = c("With Year as Fixed Effect" = "blue", "Without Year as Fixed Effect" = "red")) +  # Customize line colors
-  scale_fill_manual(values = c("With Year as Fixed Effect" = "lightblue", "Without Year as Fixed Effect" = "lightpink")) +  # Customize ribbon fills
-  theme_minimal() +
-  theme(
-    legend.position = "bottom",  # Position the legend at the bottom
-    legend.title = element_blank()  # Optionally remove the legend title
-  )
 
 #Total Plots
 pred_Total <- ggpredict(Total, terms = "Total [all]")
@@ -516,8 +500,8 @@ pred_yr_Total <- ggpredict(yr_Total, terms = "Total [all]")
 pred_Total$Total <- pred_Total$x
 pred_yr_Total$Total <- pred_yr_Total$x
 
-pred_Total<- pred_Total %>% left_join(rate_filtered, by= "Total")
-pred_yr_Total<- pred_yr_Total %>% left_join(rate_filtered, by= "Total")
+pred_Total<- pred_Total %>% left_join(FWS_pred, by= "Total")
+pred_yr_Total<- pred_yr_Total %>% left_join(FWS_pred, by= "Total")
 
 # Convert to data frames
 df_Total <- as.data.frame(pred_Total)
@@ -559,8 +543,8 @@ pred_yr_LU_Total <- ggpredict(yr_LU_Total, terms = "LU_Total [all]")
 pred_LU_Total$LU_Total <- pred_LU_Total$x
 pred_yr_LU_Total$LU_Total <- pred_yr_LU_Total$x
 
-pred_LU_Total<- pred_LU_Total %>% left_join(rate_filtered, by= "LU_Total")
-pred_yr_LU_Total<- pred_yr_LU_Total %>% left_join(rate_filtered, by= "LU_Total")
+pred_LU_Total<- pred_LU_Total %>% left_join(FWS_pred, by= "LU_Total")
+pred_yr_LU_Total<- pred_yr_LU_Total %>% left_join(FWS_pred, by= "LU_Total")
 
 # Convert to data frames
 df_LU_Total <- as.data.frame(pred_LU_Total)
@@ -596,29 +580,16 @@ ggplot(combined_LU_Total, aes(x = x, y = rate)) +
 
 
 
-
-FWS_pred<-FWS
-
-FWS_pred$predicted_year <- predict(yr_Hinds, newdata = FWS, 
-                                   type = "response", re.form = NA, 
-                                   allow.new.levels = TRUE)
-FWS_pred$predicted_noyear <- predict(Hinds, newdata = FWS, type = "response", re.form = NA, allow.new.levels = TRUE)
-
-
-FWS_pred <- FWS_pred %>% left_join(rate_filtered, by = "DeerYear")
-
-# Plot the data and the model fit
-ggplot(FWS_pred, aes(x = Hinds, y = rate)) +
-  geom_point(alpha = 0.5) +
-  geom_smooth(aes(y = predicted_year), method = "loess", color = "blue",fill="lightblue") +
-  geom_smooth(aes(y = predicted_noyear), method = "loess", color = "red",fill = "lightpink") +
-  theme_minimal() +
-  labs(title = "Binomial Logistic Regression Model Fit (Fixed Effects Only)",
-       x = "Hinds",
-       y = "Probability of First Winter Survival")
+print(pred_Hinds)
+print(pred_yr_Hinds)
+print(pred_Adults)
+print(pred_yr_Adults)
+print(pred_Total)
+print(pred_yr_Total)
+print(pred_LU_Total)
+print(pred_yr_LU_Total)
 
 
-FWS_pred$predicted_survival <- predict(yr_Hinds, type = "response")
 
 # Calculate average fecundity per density
 

@@ -3,6 +3,7 @@ library(lme4)
 library(ggplot2)
 library(lmerTest)
 library(glmmTMB)
+library(ggeffects)
 
 fecundity<-read.csv("Fecundity_yr-1.csv")
 
@@ -535,6 +536,13 @@ summary(yr_Adults_fecundity_age)
 summary(yr_Total_fecundity_age)
 summary(yr_LU_Total_fecundity_age)
 
+yr_noden_fecundity_age<-glmmTMB(Fecundity~Age+AgeSquared+ReprodStatus+DeerYear+(1|DeerYear)+(1|Female),family = binomial(link = "logit"),data=rut)
+summary(yr_noden_fecundity_age)
+
+noyr_noden_fecundity_age<-glmmTMB(Fecundity~Age+AgeSquared+ReprodStatus+DeerYear+(1|DeerYear)+(1|Female),family = binomial(link = "logit"),data=rut)
+summary(noyr_noden_fecundity_age)
+
+
 #models with interaction age and additional year
 int_yr_Hinds_fecundity_age<-glmmTMB(Fecundity~Hinds*ReprodStatus+Age+AgeSquared+DeerYear+(1|DeerYear)+(1|Female),family = binomial(link = "logit"),data=rut)
 
@@ -766,3 +774,213 @@ ggplot(portion, aes(x = LU_Total)) +
                                 "true_yeld" = "green", "naive" = "orange"),
                      breaks = c("milk", "summer_yeld", "winter_yeld", "true_yeld", "naive"),
                      labels = c("milk", "summer_yeld", "winter_yeld", "true_yeld", "naive"))
+
+
+#Plots
+#Hinds----
+
+portion_filtered <- portion %>% select(DeerYear,portion)
+
+fecundity_pred <- rut %>% left_join(portion_filtered, by = "DeerYear")
+
+predictions_Hinds_fecundity_yr <- ggpredict(yr_Hinds_fecundity_age, terms = "Hinds [all]")
+
+predictions_Hinds_fecundity_yr$Hinds <- predictions_Hinds_fecundity_yr$x
+
+predictions_Hinds_fecundity_noyr <- ggpredict(Hinds_fecundity_age, terms = "Hinds [all]")
+predictions_Hinds_fecundity_noyr$Hinds <- predictions_Hinds_fecundity_noyr$x
+
+
+fecundity_pred_Hinds_yr <- fecundity_pred %>% left_join(predictions_Hinds_fecundity_yr, by = "Hinds")
+
+fecundity_pred_Hinds_noyr <- fecundity_pred %>% left_join(predictions_Hinds_fecundity_noyr, by = "Hinds")
+
+# Add a Type column to differentiate the data sets
+fecundity_pred_Hinds_yr$Type <- "With Year as Fixed effect"
+fecundity_pred_Hinds_noyr$Type <- "Without Year as Fixed effect"
+
+# Combine the data frames
+combined_fecundity_Hinds <- rbind(
+  fecundity_pred_Hinds_yr,
+  fecundity_pred_Hinds_noyr
+)
+
+# Keep only unique points for plotting
+unique_fecundity_Hinds <- combined_fecundity_Hinds %>%
+  distinct(Hinds, portion,.keep_all = TRUE)
+
+
+# Plot the combined data
+ggplot(combined_fecundity_Hinds, aes(x = Hinds, y = Fecundity)) +
+  geom_jitter(width = 1, height = 0.01, alpha = 0.008, size = 2) +
+  geom_point(data = unique_fecundity_Hinds, aes(y = portion)) +
+  geom_text(data = unique_fecundity_Hinds, aes(y = portion + 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "Hinds Density",
+    y = "Predicted Probability of female reproduction",
+    title = "Predicted Probability of female reproduction over Density\nwith 95% Confidence Interval"
+  ) +
+  scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",  # Position the legend at the bottom
+    legend.title = element_blank() ) # Optionally remove the legend title
+  
+#Adults----
+
+predictions_Adults_fecundity_yr <- ggpredict(yr_Adults_fecundity_age, terms = "Adults [all]")
+
+predictions_Adults_fecundity_yr$Adults <- predictions_Adults_fecundity_yr$x
+
+predictions_Adults_fecundity_noyr <- ggpredict(Adults_fecundity_age, terms = "Adults [all]")
+predictions_Adults_fecundity_noyr$Adults <- predictions_Adults_fecundity_noyr$x
+
+
+fecundity_pred_Adults_yr <- fecundity_pred %>% left_join(predictions_Adults_fecundity_yr, by = "Adults")
+
+fecundity_pred_Adults_noyr <- fecundity_pred %>% left_join(predictions_Adults_fecundity_noyr, by = "Adults")
+
+# Add a Type column to differentiate the data sets
+fecundity_pred_Adults_yr$Type <- "With Year as Fixed effect"
+fecundity_pred_Adults_noyr$Type <- "Without Year as Fixed effect"
+
+# Combine the data frames
+combined_fecundity_Adults <- rbind(
+  fecundity_pred_Adults_yr,
+  fecundity_pred_Adults_noyr
+)
+
+# Keep only unique points for plotting
+unique_fecundity_Adults <- combined_fecundity_Adults %>%
+  distinct(Adults, portion,.keep_all = TRUE)
+
+
+# Plot the combined data
+ggplot(combined_fecundity_Adults, aes(x = Adults, y = Fecundity)) +
+  geom_point(shape=1) +
+  geom_point(data = unique_fecundity_Adults, aes(y = portion)) +
+  geom_text(data = unique_fecundity_Adults, aes(y = portion + 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "Adults Density",
+    y = "Predicted Probability of female reproduction",
+    title = "Predicted Probability of female reproduction over Density\nwith 95% Confidence Interval"
+  ) +
+  scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",  # Position the legend at the bottom
+    legend.title = element_blank())  # Optionally remove the legend title
+  
+#Total----
+
+predictions_Total_fecundity_yr <- ggpredict(yr_Total_fecundity_age, terms = "Total [all]")
+
+predictions_Total_fecundity_yr$Total <- predictions_Total_fecundity_yr$x
+
+predictions_Total_fecundity_noyr <- ggpredict(Total_fecundity_age, terms = "Total [all]")
+predictions_Total_fecundity_noyr$Total <- predictions_Total_fecundity_noyr$x
+
+
+fecundity_pred_Total_yr <- fecundity_pred %>% left_join(predictions_Total_fecundity_yr, by = "Total")
+
+fecundity_pred_Total_noyr <- fecundity_pred %>% left_join(predictions_Total_fecundity_noyr, by = "Total")
+
+# Add a Type column to differentiate the data sets
+fecundity_pred_Total_yr$Type <- "With Year as Fixed effect"
+fecundity_pred_Total_noyr$Type <- "Without Year as Fixed effect"
+
+# Combine the data frames
+combined_fecundity_Total <- rbind(
+  fecundity_pred_Total_yr,
+  fecundity_pred_Total_noyr
+)
+
+# Keep only unique points for plotting
+unique_fecundity_Total <- combined_fecundity_Total %>%
+  distinct(Total, portion,.keep_all = TRUE)
+
+
+# Plot the combined data
+ggplot(combined_fecundity_Total, aes(x = Total, y = Fecundity)) +
+  geom_point(shape=1) +
+  geom_point(data = unique_fecundity_Total, aes(y = portion)) +
+  geom_text(data = unique_fecundity_Total, aes(y = portion + 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "Total Density",
+    y = "Predicted Probability of female reproduction",
+    title = "Predicted Probability of female reproduction over Density\nwith 95% Confidence Interval"
+  ) +
+  scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",  # Position the legend at the bottom
+    legend.title = element_blank())  # Optionally remove the legend title
+  
+#LU_Total----
+
+predictions_LU_Total_fecundity_yr <- ggpredict(yr_LU_Total_fecundity_age, terms = "LU_Total [all]")
+predictions_LU_Total_fecundity_yr$LU_Total <- predictions_LU_Total_fecundity_yr$x
+
+
+predictions_LU_Total_fecundity_noyr <- ggpredict(LU_Total_fecundity_age, terms = "LU_Total [all]")
+predictions_LU_Total_fecundity_noyr$LU_Total <- predictions_LU_Total_fecundity_noyr$x
+
+
+fecundity_pred_LU_Total_yr <- fecundity_pred %>% left_join(predictions_LU_Total_fecundity_yr, by = "LU_Total")
+
+fecundity_pred_LU_Total_noyr <- fecundity_pred %>% left_join(predictions_LU_Total_fecundity_noyr, by = "LU_Total")
+
+# Add a Type column to differentiate the data sets
+fecundity_pred_LU_Total_yr$Type <- "With Year as Fixed effect"
+fecundity_pred_LU_Total_noyr$Type <- "Without Year as Fixed effect"
+
+# Combine the data frames
+combined_fecundity_LU_Total <- rbind(
+  fecundity_pred_LU_Total_yr,
+  fecundity_pred_LU_Total_noyr
+)
+
+# Keep only unique points for plotting
+unique_fecundity_LU_Total <- combined_fecundity_LU_Total %>%
+  distinct(LU_Total, portion,.keep_all = TRUE)
+
+
+# Plot the combined data
+ggplot(combined_fecundity_LU_Total, aes(x = LU_Total, y = Fecundity)) +
+  geom_point(shape=1) +
+  geom_point(data = unique_fecundity_LU_Total, aes(y = portion)) +
+  geom_text(data = unique_fecundity_LU_Total, aes(y = portion + 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "LU_Total Density",
+    y = "Predicted Probability of female reproduction",
+    title = "Predicted Probability of female reproduction over Density\nwith 95% Confidence Interval"
+  ) +
+  scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",  # Position the legend at the bottom
+    legend.title = element_blank() ) # Optionally remove the legend title
+  
+
+
+
+print(predictions_Hinds_fecundity_yr)
+print(predictions_Hinds_fecundity_noyr)
+print(predictions_Adults_fecundity_yr)
+print(predictions_Adults_fecundity_noyr)
+print(predictions_Total_fecundity_yr)
+print(predictions_Total_fecundity_noyr)
+print(predictions_LU_Total_fecundity_yr)
+print(predictions_LU_Total_fecundity_noyr)
