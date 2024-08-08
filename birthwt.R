@@ -1,10 +1,24 @@
-install.packages("sjPlot")
-
 library(tidyverse)
 library(lme4)
 library(ggplot2)
 library(lmerTest)
 library(glmmTMB)
+library(ggeffects)
+library (sjPlot)
+
+ind_bw<-birthwt[,"Code", drop = FALSE]
+ind_fws<-FWS[,"Code", drop = FALSE]
+ind_spike<-Spike_pred[,"Code", drop = FALSE]
+ind_fecundity<-unique_rut[,"Female", drop = FALSE]
+names(ind_fecundity) <- "Code"
+
+all_individuals <- rbind(ind_bw, ind_fws, ind_spike, ind_fecundity)
+
+
+all_individuals <- unique(all_individuals)
+
+
+
 birthwt<-read.csv("birth_wt_mum_age.csv")
 
 Density<-read.csv("Population_estimate_calculations.csv")
@@ -273,6 +287,42 @@ summary(noyr_Mum_Total_bw)
 summary(noyr_Mum_LU_Total_bw)
 
 
+reduced_bw_noyr<-glmmTMB(BirthWt~Sex
+                    +DaysFrom1May
+                    +MumAge
+                    +MumAgeSquared
+                    +MotherStatus
+                    +(1|MumCode),
+                    family = gaussian(),data=birthwt)
+
+reduced_bw_nomumid<-glmmTMB(BirthWt~Sex
+                            +DaysFrom1May
+                            +MumAge
+                            +MumAgeSquared
+                            +MotherStatus
+                            +(1|DeerYear),
+                            family = gaussian(),data=birthwt)
+
+anova(Mum_noyr_noden_bw,reduced_bw_noyr)
+anova(Mum_noyr_noden_bw,reduced_bw_nomumid)
+
+anova(Mum_noden_bw,Mum_noyr_noden_bw)
+anova(Mum_noyr_noden_bw,Mum_Hinds_bw)
+anova(Mum_noyr_noden_bw,Mum_Adults_bw)
+anova(Mum_noyr_noden_bw,Mum_Total_bw)
+anova(Mum_noyr_noden_bw,Mum_LU_Total_bw)
+
+plot_model(Mum_noyr_noden_bw,type = "pred", terms = c("DeerYear [all]", "MotherStatus"))
+
+plot_model(Mum_noyr_noden_bw,type = "pred", terms = "MotherStatus")
+
+plot_model(Mum_noyr_noden_bw)
+
+
+tab_model(Mum_noyr_noden_bw,digits = 4, show.ci = FALSE, show.se = TRUE)
+plot_model(Mum_noyr_noden_bw)
+
+
 int_Hinds_bw<-glmmTMB(BirthWt~Hinds*MotherStatus
                       +Sex
                       +DaysFrom1May
@@ -318,102 +368,6 @@ summary(int_Adults_bw)
 summary(int_Total_bw)
 summary(int_LU_Total_bw)
 
-str(birthwt)
-
-
-M_birthwt<-birthwt%>% filter(!Sex %in% c(1,3))
-F_birthwt<-birthwt%>% filter(!Sex %in% c(2,3))
-
-M_Hinds_bw<-glmmTMB(BirthWt~Hinds
-                  +DaysFrom1May
-                  +DeerYear
-                  +MumAge
-                  +MumAgeSquared
-                  +MotherStatus
-                  +(1|DeerYear)
-                  +(1|MumCode),
-                  family = gaussian(),data=M_birthwt)
-
-M_Adults_bw<-glmmTMB(BirthWt~Adults
-                   +DaysFrom1May
-                   +DeerYear
-                   +MumAge
-                   +MumAgeSquared
-                   +MotherStatus
-                   +(1|DeerYear)
-                   +(1|MumCode),
-                   family = gaussian(),data=M_birthwt)
-
-M_Total_bw<-glmmTMB(BirthWt~Total
-                  +DaysFrom1May
-                  +DeerYear
-                  +MumAge
-                  +MumAgeSquared
-                  +MotherStatus
-                  +(1|DeerYear)
-                  +(1|MumCode),
-                  family = gaussian(),data=M_birthwt)
-
-M_LU_Total_bw<-glmmTMB(BirthWt~LU_Total
-                     +DaysFrom1May
-                     +DeerYear
-                     +MumAge
-                     +MumAgeSquared
-                     +MotherStatus
-                     +(1|DeerYear)
-                     +(1|MumCode),
-                     family = gaussian(),data=M_birthwt)
-
-summary(M_Hinds_bw)
-summary(M_Adults_bw)
-summary(M_Total_bw)
-summary(M_LU_Total_bw)
-
-F_Hinds_bw<-glmmTMB(BirthWt~Hinds
-                  +DaysFrom1May
-                  +DeerYear
-                  +MumAge
-                  +MumAgeSquared
-                  +MotherStatus
-                  +(1|DeerYear)
-                  +(1|MumCode),
-                  family = gaussian(),data=F_birthwt)
-
-F_Adults_bw<-glmmTMB(BirthWt~Adults
-                   +DaysFrom1May
-                   +DeerYear
-                   +MumAge
-                   +MumAgeSquared
-                   +MotherStatus
-                   +(1|DeerYear)
-                   +(1|MumCode),
-                   family = gaussian(),data=F_birthwt)
-
-F_Total_bw<-glmmTMB(BirthWt~Total
-                  +DaysFrom1May
-                  +DeerYear
-                  +MumAge
-                  +MumAgeSquared
-                  +MotherStatus
-                  +(1|DeerYear)
-                  +(1|MumCode),
-                  family = gaussian(),data=F_birthwt)
-
-F_LU_Total_bw<-glmmTMB(BirthWt~LU_Total
-                     +DaysFrom1May
-                     +DeerYear
-                     +MumAge
-                     +MumAgeSquared
-                     +MotherStatus
-                     +(1|DeerYear)
-                     +(1|MumCode),
-                     family = gaussian(),data=F_birthwt)
-
-summary(F_Hinds_bw)
-summary(F_Adults_bw)
-summary(F_Total_bw)
-summary(F_LU_Total_bw)
-
 
 #Simple models
 
@@ -455,72 +409,7 @@ summary(simple_Total_bw)
 summary(simple_LU_Total_bw)
 
 
-Msimple_Hinds_bw<-glmmTMB(BirthWt~Hinds
-                          +DaysFrom1May
-                          +DeerYear
-                          +(1|DeerYear)
-                          +(1|MumCode),
-                          family = gaussian(),data=M_birthwt)
-
-Msimple_Adults_bw<-glmmTMB(BirthWt~Adults
-                           +DaysFrom1May
-                           +DeerYear
-                           +(1|DeerYear)
-                           +(1|MumCode),
-                           family = gaussian(),data=M_birthwt)
-
-Msimple_Total_bw<-glmmTMB(BirthWt~Total
-                          +DaysFrom1May
-                          +DeerYear
-                          +(1|DeerYear)
-                          +(1|MumCode),
-                          family = gaussian(),data=M_birthwt)
-
-Msimple_LU_Total_bw<-glmmTMB(BirthWt~LU_Total
-                             +DaysFrom1May
-                             +DeerYear
-                             +(1|DeerYear)
-                             +(1|MumCode),
-                             family = gaussian(),data=M_birthwt)
-
-summary(Msimple_Hinds_bw)
-summary(Msimple_Adults_bw)
-summary(Msimple_Total_bw)
-summary(Msimple_LU_Total_bw)
-
-
-Fsimple_Hinds_bw<-glmmTMB(BirthWt~Hinds
-                          +DaysFrom1May
-                          +DeerYear
-                          +(1|DeerYear)
-                          +(1|MumCode),
-                          family = gaussian(),data=F_birthwt)
-
-Fsimple_Adults_bw<-glmmTMB(BirthWt~Adults
-                           +DaysFrom1May
-                           +DeerYear
-                           +(1|DeerYear)
-                           +(1|MumCode),
-                           family = gaussian(),data=F_birthwt)
-
-Fsimple_Total_bw<-glmmTMB(BirthWt~Total
-                          +DaysFrom1May
-                          +DeerYear
-                          +(1|DeerYear)
-                          +(1|MumCode),
-                          family = gaussian(),data=F_birthwt)
-
-Fsimple_LU_Total_bw<-glmmTMB(BirthWt~LU_Total
-                             +DaysFrom1May
-                             +DeerYear
-                             +(1|DeerYear)
-                             +(1|MumCode),
-                             family = gaussian(),data=F_birthwt)
-
-summary(Fsimple_Hinds_bw)
-summary(Fsimple_Adults_bw)
-summary(Fsimple_Total_bw)
-summary(Fsimple_LU_Total_bw)
+birthwt <-na.omit(birthwt)
 
 AvgBw <- birthwt %>%
   group_by(DeerYear) %>%
@@ -529,6 +418,28 @@ AvgBw <- birthwt %>%
     sample_size = n(),
     se_Bw = sd(BirthWt) / sqrt(n())
   )
+
+AvgBw73 <-AvgBw %>% filter(!DeerYear %in% c(1968,1969,1970,1971,1972))
+
+
+
+ggplot(data = AvgBw73, aes(x = DeerYear, y = mean_Bw)) +
+  geom_line(color = "black", size = 0.75) +
+  geom_point(color = "black", size = 2,shape = 15) +  
+  geom_errorbar(aes(ymin = mean_Bw - se_Bw, ymax = mean_Bw + se_Bw), width = 0.2, color = "black") +
+  scale_x_continuous(breaks = seq(1973, 2022, by = 1))+
+  labs( x = "Year of Birth", y = "Mean Birth Weight (kg)") +
+  theme_minimal() +
+  theme( axis.title.x = element_text(size = 15),  
+         axis.title.y = element_text(size = 15),
+         axis.text.x = element_text(size = 12,angle = 90, hjust = 0),
+         axis.text.y = element_text(size = 12),
+         axis.line = element_line(color = "black", size = 0.5),
+         panel.background = element_blank(),  # Remove background gridlines
+         legend.position = "bottom") +
+  geom_text(aes(y = mean_Bw + se_Bw + 0.15, label = paste0("(", sample_size, ")")), size = 3, color = "black") 
+
+
 
 
 #Hinds----
@@ -612,26 +523,43 @@ combined_Bw_Adults <- rbind(
 unique_Bw_Adults <- combined_Bw_Adults %>%
   distinct(Adults, mean_Bw, .keep_all = TRUE)
 
+Adults_Bw_terms <- paste(
+  "Adjusted for:",
+  "Sex = Male",
+  "Mother's Reproductive Status = True yeld",
+  "Mother's Age = 8",
+  "Mother's Age Squared = 64",
+  "Days From 1st May = 35",
+  "Deer Year = 2001",
+  sep = "\n"
+)
 
 # Plot the combined data
 ggplot(combined_Bw_Adults, aes(x = Adults, y = mean_Bw)) +
   geom_point(shape=1) +
   geom_point(data = unique_Bw_Adults) +
-  geom_text(data = unique_Bw_Adults, aes(y = mean_Bw + 0.1, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
+  geom_text(data = unique_Bw_Adults, aes(y = mean_Bw + 0.05, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
   geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
   labs(
-    x = "Adults Density",
+    x = "Adult Population Size",
     y = "Mean Birth Weight (kg)",
-    title = "Predicted Mean Birth Weight over Density\nwith 95% Confidence Interval"
   ) +
   scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +  # Customize line colors
   scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +  # Customize ribbon fills
   theme_minimal() +
-  theme(
-    legend.position = "bottom",  # Position the legend at the bottom
-    legend.title = element_blank()  # Optionally remove the legend title
-  )
+  theme( axis.title.x = element_text(size = 15),  
+         axis.title.y = element_text(size = 15),
+         axis.text.x = element_text(size = 12),
+         axis.text.y = element_text(size = 12),
+         legend.text = element_text(size = 10),
+         axis.line = element_line(color = "black", size = 0.5),
+         panel.background = element_blank(),  # Remove background gridlines
+         legend.position = "bottom",  # Position the legend at the bottom
+         legend.title = element_blank())+ # Optionally remove the legend title
+  annotate("text", x = 185, y = 6.31, label = Adults_Bw_terms, size = 4, color = "#8A7D23", hjust = 0, vjust = 1) 
+
+
 
 
 #Total----

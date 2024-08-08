@@ -3,6 +3,7 @@ library(lme4)
 library(ggplot2)
 library(lmerTest)
 library(glmmTMB)
+library(ggeffects)
 
 
 FWS<-read.csv("FWS_data.csv")
@@ -127,92 +128,6 @@ noyr_noden<-glmmTMB(FWSurvival~Sex
 
 summary(noyr_noden)
 
-#sexed
-
-male_FWS<- FWS %>% filter(!Sex %in% c(1,3))
-fem_FWS<- FWS %>% filter(!Sex %in% c(2,3))
-
-#Male FWS
-MHinds<-glmmTMB(FWSurvival~Hinds+MotherStatus+MumAge+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=male_FWS)
-
-MAdults<-glmmTMB(FWSurvival~Adults+MotherStatus+MumAge+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=male_FWS)
-
-MTotal<-glmmTMB(FWSurvival~Total+MotherStatus+MumAge+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=male_FWS)
-
-MLU_Total<-glmmTMB(FWSurvival~LU_Total+MotherStatus+MumAge+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=male_FWS)
-
-summary(MHinds)
-summary(MAdults)
-summary(MTotal)
-summary(MLU_Total)
-
-
-
-MCalves_M<-glmmTMB(FWSurvival~Calves_M
-                   +MotherStatus
-                   +MumAge
-                   +MumAgeSquared
-                   +BirthWt
-                   +(1|DeerYear)
-                   +(1|MumCode),
-                   family = binomial(link = "logit"),data=male_FWS)
-
-MCalves_F<-glmmTMB(FWSurvival~Calves_F
-                   +MotherStatus
-                   +MumAge
-                   +MumAgeSquared
-                   +BirthWt
-                   +(1|DeerYear)
-                   +(1|MumCode),
-                   family = binomial(link = "logit"),data=male_FWS)
-
-
-MStags<-glmmTMB(FWSurvival~Stags+MotherStatus+MumAge+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=male_FWS)
-MCalves<-glmmTMB(FWSurvival~Calves+MotherStatus+MumAge+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=male_FWS)
-summary(MStags)
-summary(MCalves)
-summary(MCalves_M)
-summary(MCalves_F)
-
-#Female FWS
-FHinds<-glmmTMB(FWSurvival~Hinds+MotherStatus+MumAge+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=fem_FWS)
-
-FAdults<-glmmTMB(FWSurvival~Adults+MotherStatus+MumAge+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=fem_FWS)
-
-FTotal<-glmmTMB(FWSurvival~Total+MotherStatus+MumAge+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=fem_FWS)
-
-FLU_Total<-glmmTMB(FWSurvival~LU_Total+MotherStatus+MumAge+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=fem_FWS)
-
-summary(FHinds)
-summary(FAdults)
-summary(FTotal)
-summary(FLU_Total)
-
-FCalves_M<-glmmTMB(FWSurvival~Calves_M
-                   +MotherStatus
-                   +MumAge
-                   +MumAgeSquared
-                   +BirthWt
-                   +(1|DeerYear)
-                   +(1|MumCode),
-                   family = binomial(link = "logit"),data=fem_FWS)
-
-FCalves_F<-glmmTMB(FWSurvival~Calves_F
-                   +MotherStatus
-                   +MumAge
-                   +MumAgeSquared
-                   +BirthWt
-                   +(1|DeerYear)
-                   +(1|MumCode),
-                   family = binomial(link = "logit"),data=fem_FWS)
-
-
-FStags<-glmmTMB(FWSurvival~Stags+MotherStatus+MumAge+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=fem_FWS)
-FCalves<-glmmTMB(FWSurvival~Calves+MotherStatus+MumAge+MumAgeSquared+BirthWt+(1|DeerYear)+(1|MumCode),family = binomial,data=fem_FWS)
-summary(FStags)
-summary(FCalves)
-summary(FCalves_M)
-summary(FCalves_F)
 #plots
 
 rate<- FWS %>%
@@ -259,6 +174,30 @@ ggplot(rate, aes(x = DeerYear, y = rate)) +
   theme_minimal() +
   geom_text(aes(y = rate+ 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") 
 
+
+AvgFWS <- FWS %>%
+  group_by(DeerYear) %>%
+  summarise(
+    mean_FWS = mean(FWSurvival),
+    sample_size = n(),
+    se_FWS = sd(FWSurvival) / sqrt(n())
+  )
+
+ggplot(data = AvgFWS, aes(x = DeerYear, y = mean_FWS)) +
+  geom_line(color = "black", size = 0.75) +
+  geom_point(color = "black", size = 2,shape = 15) +  
+  geom_errorbar(aes(ymin = mean_FWS - se_FWS, ymax = mean_FWS + se_FWS), width = 0.2, color = "black") +
+  scale_x_continuous(breaks = seq(1973, 2021, by = 1))+
+  labs( x = "Year", y = "Probability of Surviving First Winter") +
+  theme_minimal() +
+  theme( axis.title.x = element_text(size = 15),  
+         axis.title.y = element_text(size = 15),
+         axis.text.x = element_text(size = 12,angle = 90,hjust = 0),
+         axis.text.y = element_text(size = 12),
+         axis.line = element_line(color = "black", size = 0.5),
+         panel.background = element_blank(),  # Remove background gridlines
+         legend.position = "bottom") +
+  geom_text(aes(y = mean_FWS + se_FWS + 0.05, label = paste0("(", sample_size, ")")), size = 3, color = "black") 
 
 
 
@@ -387,8 +326,6 @@ ggplot(male_rate, aes(x = LU_Total, y = rate)) +
 
 #plots
 
-library(ggeffects)
-
 
 # Generate predictions
 
@@ -407,8 +344,8 @@ pred_yr_Hinds$Hinds <- pred_yr_Hinds$x
 print(pred_Hinds)
 
 print(pred_yr_Hinds)
-
-
+summary(Hinds)
+tab_model(Hinds, transform = NULL, digits = 4, show.ci = FALSE, show.se = TRUE)
 
 pred_Hinds<- pred_Hinds %>% left_join(FWS_pred, by= "Hinds")
 pred_yr_Hinds<- pred_yr_Hinds %>% left_join(FWS_pred, by= "Hinds")
@@ -428,24 +365,40 @@ combined_data <- rbind(df_Hinds, df_yr_Hinds)
 unique_points <- combined_data %>%
   distinct(Hinds, rate, .keep_all = TRUE)
 
+Hind_FWS_terms <- paste(
+  "Adjusted for:",
+  "Sex = Male",
+  "Mother's Reproductive Status = True yeld",
+  "Mother's Age = 8",
+  "Mother's Age Squared = 64",
+  "Birth Weight = 6.51 kg",
+  "Deer Year = 1999",
+  sep = "\n"
+)
+
 ggplot(combined_data, aes(x = x, y = rate)) +
-  geom_point(data = unique_points, aes(y = rate)) +
-  geom_jitter(aes(y=FWSurvival),width = 0.1, height = 0.1) +
-  geom_text(data = unique_points, aes(y = rate + 0.1, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
+  geom_jitter(aes(y=FWSurvival),width = 1, height = 0.01, alpha = 0.008, size = 2) +
   geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
   labs(
-    x = "Hind Density",
-    y = "Predicted Survival Probability",
-    title = "Predicted Survival Probability over Density\nwith 95% Confidence Interval"
+    x = "Hind Population Size",
+    y = "Predicted Probability of Surviving First Winter"
   ) +
   scale_color_manual(values = c("With Year as Fixed Effect" = "blue", "Without Year as Fixed Effect" = "red")) +  # Customize line colors
   scale_fill_manual(values = c("With Year as Fixed Effect" = "lightblue", "Without Year as Fixed Effect" = "lightpink")) +  # Customize ribbon fills
   theme_minimal() +
-  theme(
-    legend.position = "bottom",  # Position the legend at the bottom
-    legend.title = element_blank()  # Optionally remove the legend title
-  )
+  theme( axis.title.x = element_text(size = 15),  
+         axis.title.y = element_text(size = 15),
+         axis.text.x = element_text(size = 12),
+         axis.text.y = element_text(size = 12),
+         legend.text = element_text(size = 10),
+         axis.line = element_line(color = "black", size = 0.5),
+         panel.background = element_blank(),  # Remove background gridlines
+         legend.position = "bottom",  # Position the legend at the bottom
+    legend.title = element_blank())+ # Optionally remove the legend title
+  annotate("text", x = 80, y = 0.3, label = Hind_FWS_terms, size = 4, color = "#8A7D23", hjust = 0, vjust = 1) 
+  
+  
 
 
 

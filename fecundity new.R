@@ -4,6 +4,7 @@ library(ggplot2)
 library(lmerTest)
 library(glmmTMB)
 library(ggeffects)
+library(sjPlot)
 
 fecundity<-read.csv("Fecundity_yr-1.csv")
 
@@ -27,6 +28,11 @@ fecundity_mod<-glmmTMB(Fecundity~Adults
 summary(fecundity_mod)
 
 rut <- fecundity %>% filter(SeenInRut==-1)
+
+rut <- na.omit(rut)
+
+unique_rut <- rut%>% distinct(Female, .keep_all = TRUE)
+
 
 milk <- rut %>% filter(ReprodStatus=="Milk")
 
@@ -466,45 +472,11 @@ Total_fecundity_age<-glmmTMB(Fecundity~Total+Age+AgeSquared+ReprodStatus+(1|Deer
 LU_Total_fecundity_age<-glmmTMB(Fecundity~LU_Total+Age+AgeSquared+ReprodStatus+(1|DeerYear)+(1|Female),family = binomial(link = "logit"),data=rut)
 
 summary(Hinds_fecundity_age)
-summary(Adults_fecundity_age)
+summary(Adults_fecundity222_age)
 summary(Total_fecundity_age)
 summary(LU_Total_fecundity_age)
 
-
-
-# Filter out non-finite values from the Hinds column
-rut_filtered <- rut %>%
-  filter(is.finite(Hinds))
-
-# Generate new data for prediction
-new_data <- expand.grid(
-  Hinds = seq(min(rut_filtered$Hinds, na.rm = TRUE), max(rut_filtered$Hinds, na.rm = TRUE), length.out = 100),
-  Age = mean(rut_filtered$Age, na.rm = TRUE),
-  AgeSquared = mean(rut_filtered$AgeSquared, na.rm = TRUE),
-  ReprodStatus = unique(rut_filtered$ReprodStatus),
-  DeerYear = unique(rut_filtered$DeerYear),
-  Female = unique(rut_filtered$Female)
-)
-
-# Generate predictions with standard errors
-predictions <- predict(Hinds_fecundity_age, newdata = new_data, se.fit = TRUE, re.form = NA, type = "response")
-new_data$Fecundity_pred <- predictions$fit
-new_data$SE <- predictions$se.fit
-new_data <- new_data %>%
-  mutate(
-    lower = Fecundity_pred - 1.96 * SE,
-    upper = Fecundity_pred + 1.96 * SE
-  )
-
-# Plot the actual data and the model's predictions with standard error bands
-ggplot(data = rut_filtered, aes(x = Hinds, y = Fecundity)) +
-  geom_point(alpha = 0.5, position = position_jitter(width = 0.2, height = 0.02)) +
-  geom_line(data = new_data, aes(x = Hinds, y = Fecundity_pred), color = "blue") +
-  geom_ribbon(data = new_data, aes(x = Hinds, ymin = lower, ymax = upper), alpha = 0.2, fill = "blue") +
-  labs(title = "Model Fit of Fecundity vs Hinds with Standard Error Bands", 
-       x = "Number of Hinds", y = "Fecundity (Probability)") +
-  theme_minimal()
-
+tab_model(Hinds_fecundity_age, transform = NULL, digits = 4, show.ci = FALSE, show.se = TRUE)
 
 
 #with interaction and age no year 
@@ -556,6 +528,8 @@ summary(int_yr_Hinds_fecundity_age)
 summary(int_yr_Adults_fecundity_age)
 summary(int_yr_Total_fecundity_age)
 summary(int_yr_LU_Total_fecundity_age)
+
+tab_model(int_yr_Adults_fecundity_age, transform = NULL, digits = 4, show.ci = FALSE, show.se = TRUE)
 
 # anova(int_yr_Hinds_fecundity_age,int_yr_Adults_fecundity_age test = "Chisq")
 
@@ -779,6 +753,31 @@ ggplot(portion, aes(x = LU_Total)) +
 #Plots
 #Hinds----
 
+Avgrut <- rut %>%
+  group_by(DeerYear) %>%
+  summarise(
+    mean_fec = mean(Fecundity),
+    sample_size = n(),
+    se_fec = sd(Fecundity) / sqrt(n())
+  )
+
+ggplot(data = Avgrut, aes(x = DeerYear, y = mean_fec)) +
+  geom_line(color = "black", size = 0.75) +
+  geom_point(color = "black", size = 2,shape = 15) +  
+  geom_errorbar(aes(ymin = mean_fec - se_fec, ymax = mean_fec + se_fec), width = 0.2, color = "black") +
+  scale_x_continuous(breaks = seq(1973, 2022, by = 1))+
+  labs( x = "Year", y = "Probability of Female Reproduction") +
+  theme_minimal() +
+  theme( axis.title.x = element_text(size = 15),  
+         axis.title.y = element_text(size = 15),
+         axis.text.x = element_text(size = 12,angle = 90,hjust = 0),
+         axis.text.y = element_text(size = 12),
+         axis.line = element_line(color = "black", size = 0.5),
+        panel.background = element_blank(),  # Remove background gridlines
+        legend.position = "bottom") +
+  geom_text(aes(y = mean_fec + se_fec + 0.05, label = paste0("(", sample_size, ")")), size = 3, color = "black") 
+
+
 portion_filtered <- portion %>% select(DeerYear,portion)
 
 fecundity_pred <- rut %>% left_join(portion_filtered, by = "DeerYear")
@@ -809,26 +808,37 @@ combined_fecundity_Hinds <- rbind(
 unique_fecundity_Hinds <- combined_fecundity_Hinds %>%
   distinct(Hinds, portion,.keep_all = TRUE)
 
-
+Hind_Fec_terms <- paste(
+  "Adjusted for:",
+  "Hind Reproductive Status = Milk",
+  "Hind's Age = 7",
+  "Hind's Age Squared = 49",
+  "Deer Year = 2000",
+  sep = "\n"
+)
 # Plot the combined data
 ggplot(combined_fecundity_Hinds, aes(x = Hinds, y = Fecundity)) +
   geom_jitter(width = 1, height = 0.01, alpha = 0.008, size = 2) +
-  geom_point(data = unique_fecundity_Hinds, aes(y = portion)) +
-  geom_text(data = unique_fecundity_Hinds, aes(y = portion + 0.03, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
   geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
   labs(
-    x = "Hinds Density",
-    y = "Predicted Probability of female reproduction",
-    title = "Predicted Probability of female reproduction over Density\nwith 95% Confidence Interval"
-  ) +
+    x = "Hind Population Size",
+    y = "Predicted Probability of female reproduction"  ) +
   scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +  # Customize line colors
   scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +  # Customize ribbon fills
   theme_minimal() +
-  theme(
-    legend.position = "bottom",  # Position the legend at the bottom
-    legend.title = element_blank() ) # Optionally remove the legend title
-  
+  theme( axis.title.x = element_text(size = 15),  
+         axis.title.y = element_text(size = 15),
+         axis.text.x = element_text(size = 12),
+         axis.text.y = element_text(size = 12),
+         legend.text = element_text(size = 10),
+         axis.line = element_line(color = "black", size = 0.5),
+         panel.background = element_blank(),  # Remove background gridlines
+         legend.position = "bottom",  # Position the legend at the bottom
+         legend.title = element_blank())+ # Optionally remove the legend title
+  annotate("text", x = 80, y = 0.25, label = Hind_Fec_terms, size = 4, color = "#8A7D23", hjust = 0, vjust = 1) 
+
+
 #Adults----
 
 predictions_Adults_fecundity_yr <- ggpredict(yr_Adults_fecundity_age, terms = "Adults [all]")
@@ -984,3 +994,75 @@ print(predictions_Total_fecundity_yr)
 print(predictions_Total_fecundity_noyr)
 print(predictions_LU_Total_fecundity_yr)
 print(predictions_LU_Total_fecundity_noyr)
+
+print(predictions_int_adult_fecundity_yr)
+
+
+
+
+plot_model(Hinds_fecundity_age,type = "pred", terms = "Hinds[all]")
+
+plot_model(int_yr_Adults_fecundity_age,type = "pred", terms = c("DeerYear [all]", "ReprodStatus"))
+
+plot_model(int_yr_Adults_fecundity_age,type = "pred", terms = c("Adults [all]"))
+
+plot_model(int_yr_Adults_fecundity_age,type = "pred", terms = c("Adults [all]", "ReprodStatus"))
+
+predictions_int_adult_fecundity_yr <- ggpredict(int_yr_Adults_fecundity_age, terms = "Adults [all]")
+
+predictions_int_adult_fecundity_yr$Adults <- predictions_int_adult_fecundity_yr$x
+
+predictions_int_adult_fecundity_noyr <- ggpredict(int_Adults_fecundity_age, terms = "Adults [all]")
+predictions_int_adult_fecundity_noyr$Adults <- predictions_int_adult_fecundity_noyr$x
+
+
+fecundity_pred_int_adults_yr <- fecundity_pred %>% left_join(predictions_int_adult_fecundity_yr, by = "Adults")
+
+fecundity_pred_int_adults_noyr <- fecundity_pred %>% left_join(predictions_int_adult_fecundity_noyr, by = "Adults")
+
+# Add a Type column to differentiate the data sets
+fecundity_pred_int_adults_yr$Type <- "With Year as Fixed effect"
+fecundity_pred_int_adults_noyr$Type <- "Without Year as Fixed effect"
+
+# Combine the data frames
+combined_fecundity_int_adults <- rbind(
+  fecundity_pred_int_adults_yr,
+  fecundity_pred_int_adults_noyr
+)
+
+# Keep only unique points for plotting
+unique_fecundity_int_adults <- combined_fecundity_int_adults %>%
+  distinct(Adults, portion,.keep_all = TRUE)
+
+int_adults_Fec_terms <- paste(
+  "Adjusted for:",
+  "Hind Reproductive Status = Milk",
+  "Hind's Age = 7",
+  "Hind's Age Squared = 49",
+  "Deer Year = 2000",
+  sep = "\n"
+)
+# Plot the combined data
+ggplot(combined_fecundity_int_adults, aes(x = Adults, y = Fecundity)) +
+  geom_jitter(width = 1, height = 0.01, alpha = 0.008, size = 2) +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "Adult Population Size",
+    y = "Predicted Probability of female reproduction"  ) +
+  scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme( axis.title.x = element_text(size = 15),  
+         axis.title.y = element_text(size = 15),
+         axis.text.x = element_text(size = 12),
+         axis.text.y = element_text(size = 12),
+         legend.text = element_text(size = 10),
+         axis.line = element_line(color = "black", size = 0.5),
+         panel.background = element_blank(),  # Remove background gridlines
+         legend.position = "bottom",  # Position the legend at the bottom
+         legend.title = element_blank())+ # Optionally remove the legend title
+  annotate("text", x = 190, y = 0.25, label = int_adults_Fec_terms, size = 4, color = "#8A7D23", hjust = 0, vjust = 1) 
+
+
+

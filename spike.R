@@ -3,6 +3,8 @@ library(lme4)
 library(ggplot2)
 library(lmerTest)
 library(glmmTMB)
+library(ggeffects)
+
 
 Spike<-read.csv("spike.csv")
 nowt<-read.csv("Spike_nowt.csv")
@@ -33,29 +35,44 @@ PopD_new<-bind_rows(PopD7172,PopD)
 nowt7172<-read.csv("Spike_nowt.csv")
 
 
-ggplot(PopD_new, aes(x = DeerYear)) +
-  geom_line(aes(y = Hinds, color = "Hinds"), size = 1.5) +
-  geom_line(aes(y = Stags, color = "Stags"), size = 1.5) +
-  geom_line(aes(y = Adults, color = "Adults"), size = 1.5) + 
-  geom_line(aes(y = Total, color = "Total"), size = 1.5) +
-  geom_line(aes(y = LU_Total, color = "LU_Total"), size = 1.5) +
-  labs(title = "Different Deer Density Measures per Year",
-       x = "Year",
+ggplot(PopD, aes(x = DeerYear)) +
+  geom_line(aes(y = Hinds, color = "Hinds"), size = 1) +
+  geom_line(aes(y = Adults, color = "Adults"), size = 1) + 
+  geom_line(aes(y = Total, color = "Total"), size = 1) +
+  geom_line(aes(y = LU_Total, color = "LU_Total"), size = 1) +
+  geom_hline(yintercept = c(100, 200, 300, 400), color = 'darkgrey', linetype = "dashed") + 
+  labs(x = "Year",
        y = "Deer Density") +
-  scale_color_manual(values = c("Hinds" = "red", "Stags" = "blue", "Adults" = "black", 
-                                "Total" = "green", "LU_Total" = "orange"),
-                     breaks = c("Hinds", "Stags", "Adults", "Total", "LU_Total"),
-                     labels = c("Hinds", "Stags", "Adults", "Total", "Livestock Units"))
+  scale_color_manual(name = "Density Metrics", values = c("Hinds" = "red", "Adults" = "black",
+                                "Total" = "#ff7f0e", 
+                                "LU_Total" = "#2ca02c"),
+                     breaks = c("Hinds", "Stags", "Adults", "Calves","Total", "LU_Total"),
+                     labels = c("Hinds", "Stags", "Adults", "Calves", "Total", "Livestock Units"))+
+  
+  theme(
+    axis.line = element_line(color = "black", size = 0.5),
+    panel.background = element_blank(),  # Remove background gridlines
+    legend.position = "bottom"
+  )
 
-
-ggplot(PopD_new, aes(x = DeerYear)) +
-  geom_line(aes(y = Hinds, color = "Hinds"), size = 2) +
-  geom_line(aes(y = Stags, color = "Stags"), size = 2) +
-  labs(title = "Different Deer Density Measures per Year",
-       x = "Year",
+ggplot(PopD, aes(x = DeerYear)) +
+  geom_line(aes(y = Hinds, color = "Hinds"), size = 1) +
+  geom_line(aes(y = Stags, color = "Stags"), size = 1) +
+  geom_line(aes(y = Calves, color = "Calves"), size = 1) +
+  geom_hline(yintercept = c(50,100,150, 200), color = 'darkgrey', linetype = "dashed") + 
+  labs(x = "Year",
        y = "Deer Density") +
-  scale_color_manual(values = c("red", "blue"),
-                     labels = c("Hinds", "Stags"))
+  scale_color_manual(name = "Density Metrics",
+                     values = c("Hinds" = "red","Stags" = "blue","Calves"="brown"),
+                     breaks = c("Hinds", "Stags","Calves"),
+                     labels = c("Hinds", "Stags","Calves"))+
+  
+  theme(
+    axis.line = element_line(color = "black", size = 0.5),
+    panel.background = element_blank(),  # Remove background gridlines
+    legend.position = "bottom"
+  )
+
 
 
 
@@ -139,8 +156,16 @@ ggplot(data = AvgSpike, aes(x = DeerYear, y = mean_spike)) +
   geom_line(color = "black", size = 0.75) +
   geom_point(color = "black", size = 2,shape = 15) +
   geom_errorbar(aes(ymin = mean_spike - se_spike, ymax = mean_spike + se_spike), width = 0.2, color = "black") +
-  labs(title = "Mean cohort yearling anter length for cohorts born 1970-2021", x = "Year of Birth", y = "Yearling Mean Antler Length (inches)") +
+  scale_x_continuous(breaks = seq(1973, 2022, by = 1))+
+  labs( x = "Year", y = "Yearling Mean Antler Length (inches)") +
   theme_minimal() +
+  theme( axis.title.x = element_text(size = 15),  
+         axis.title.y = element_text(size = 15),
+         axis.text.x = element_text(size = 12,angle = 90, hjust = 0),
+         axis.text.y = element_text(size = 12),
+         axis.line = element_line(color = "black", size = 0.5),
+         panel.background = element_blank(),  # Remove background gridlines
+         legend.position = "bottom") +
   geom_text(aes(y = mean_spike + se_spike + 0.5, label = paste0("(", sample_size, ")")), size = 3, color = "black") 
 
 
@@ -148,7 +173,7 @@ ggplot(data = AvgSpike96, aes(x = DeerYear, y = mean_spike)) +
   geom_line(color = "black", size = 0.75) +
   geom_point(color = "black", size = 2,shape = 15) +
   geom_errorbar(aes(ymin = mean_spike - se_spike, ymax = mean_spike + se_spike), width = 0.2, color = "black") +
-  labs(title = "Mean cohort yearling anter length for cohorts born 1970-1996", x = "Year of Birth", y = "Yearling Mean Antler Length (inches)") +
+  labs(title = "Mean cohort yearling anter length for cohorts born 1973-1996", x = "Year of Birth", y = "Yearling Mean Antler Length (inches)") +
   theme_minimal() +
   geom_text(aes(y = mean_spike + se_spike + 0.5, label = paste0("(", sample_size, ")")), size = 3, color = "black") 
 
@@ -230,6 +255,9 @@ Spike_noden<-glmmTMB(AvgSpike~BirthWt
                             +(1|MumCode),data=Spike)
 
 summary(Spike_noden)
+
+tab_model(Spike_noden,digits = 4, show.ci = FALSE, show.se = TRUE)
+plot_model(Spike_noden)
 
 
 Spike_noyr_noden<-glmmTMB(AvgSpike~BirthWt
@@ -431,6 +459,13 @@ unique_spike_Adults <- combined_spike_Adults %>%
   distinct(Adults, mean_spike, .keep_all = TRUE)
 
 
+Adults_Spike_terms <- paste(
+  "Adjusted for:",
+  "Birth Weight = 6.99 kg",
+  "Deer Year = 2001",
+  sep = "\n"
+)
+
 # Plot the combined data
 ggplot(combined_spike_Adults, aes(x = Adults, y = mean_spike)) +
   geom_point(data = unique_spike_Adults) +
@@ -438,17 +473,22 @@ ggplot(combined_spike_Adults, aes(x = Adults, y = mean_spike)) +
   geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
   labs(
-    x = "Adults Density",
-    y = "Mean Yearling Antler Length (inches)",
-    title = "Predicted Mean Yearling Antler Length over Density\nwith 95% Confidence Interval"
-  ) +
+    x = "Adults Population Size",
+    y = "Mean Yearling Spike Length (inches)"  ) +
   scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +  # Customize line colors
   scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +  # Customize ribbon fills
   theme_minimal() +
-  theme(
-    legend.position = "bottom",  # Position the legend at the bottom
-    legend.title = element_blank()  # Optionally remove the legend title
-  )
+  theme( axis.title.x = element_text(size = 15),  
+         axis.title.y = element_text(size = 15),
+         axis.text.x = element_text(size = 12),
+         axis.text.y = element_text(size = 12),
+         legend.text = element_text(size = 10),
+         axis.line = element_line(color = "black", size = 0.5),
+         panel.background = element_blank(),  # Remove background gridlines
+         legend.position = "bottom",  # Position the legend at the bottom
+         legend.title = element_blank())+ # Optionally remove the legend title
+  annotate("text", x = 185, y = 1.1, label = Adults_Spike_terms, size = 4, color = "#8A7D23", hjust = 0, vjust = 1) 
+
 
 
 
@@ -979,4 +1019,113 @@ summary(FWS_noyr_birth96Hinds_spike)
 summary(FWS_noyr_birth96Adults_spike)
 summary(FWS_noyr_birth96Total_spike)
 summary(FWS_noyr_birth96LU_Total_spike)
+
+Spike_pred_Adults_yr$Type <- "With Year as Fixed effect"
+Spike_pred_Adults_noyr$Type <- "Without Year as Fixed effect"
+
+# Combine the data frames
+combined_spike_Adults <- rbind(
+  Spike_pred_Adults_yr,
+  Spike_pred_Adults_noyr
+)
+
+# Keep only unique points for plotting
+unique_spike_Adults <- combined_spike_Adults %>%
+  distinct(Adults, mean_spike, .keep_all = TRUE)
+
+
+Adults_Spike_terms <- paste(
+  "Adjusted for:",
+  "Birth Weight = 6.99 kg",
+  "Deer Year = 2001",
+  sep = "\n"
+)
+
+# Plot the combined data
+ggplot(combined_spike_Adults, aes(x = Adults, y = mean_spike)) +
+  geom_point(data = unique_spike_Adults) +
+  geom_text(data = unique_spike_Adults, aes(y = mean_spike + 0.1, label = paste0("(", DeerYear, ")")), size = 2.5, color = "black") +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "Adults Population Size",
+    y = "Mean Yearling Spike Length (inches)"  ) +
+  scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme( axis.title.x = element_text(size = 15),  
+         axis.title.y = element_text(size = 15),
+         axis.text.x = element_text(size = 12),
+         axis.text.y = element_text(size = 12),
+         legend.text = element_text(size = 10),
+         axis.line = element_line(color = "black", size = 0.5),
+         panel.background = element_blank(),  # Remove background gridlines
+         legend.position = "bottom",  # Position the legend at the bottom
+         legend.title = element_blank())+ # Optionally remove the legend title
+  annotate("text", x = 185, y = 1.1, label = Adults_Spike_terms, size = 4, color = "#8A7D23", hjust = 0, vjust = 1) 
+
+
+#DeerYear as fixed effect
+#with and without year data
+
+predictions_spike_noden <- ggpredict(Spike_noden, terms = "DeerYear [all]")
+predictions_spike_noden$DeerYear <- predictions_spike_noden$x
+
+predictions_spike_noyr_noden <- ggpredict(Spike_noyr_noden, terms = "DeerYear [all]")
+predictions_spike_noyr_noden$DeerYear <- predictions_spike_noyr_noden$x
+
+# Add a Type column to differentiate the data sets
+predictions_spike_noden$Type <- "With Year as Fixed effect"
+predictions_spike_noyr_noden$Type <- "Without Year as Fixed effect"
+
+
+predictions_spike_noden <- Spike_pred %>% left_join(predictions_spike_noden, by = "DeerYear")
+
+predictions_spike_noyr_noden <- Spike_pred %>% left_join(predictions_spike_noyr_noden, by = "DeerYear")
+
+
+
+# Combine the data frames
+combined_spike_noden <- rbind(
+  predictions_spike_noden,
+  predictions_spike_noyr_noden
+)
+
+# Keep only unique points for plotting
+unique_spike_noden <- combined_spike_noden %>%
+  distinct(DeerYear, mean_spike, .keep_all = TRUE)
+
+print(predictions_spike_noden)
+
+noden_Spike_terms <- paste(
+  "Adjusted for:",
+  "Birth Weight = 6.99 kg",
+  sep = "\n"
+)
+
+
+
+plot_model(Spike_noden, type = "pred")
+
+# Plot the combined data
+ggplot(combined_spike_noden, aes(x = DeerYear, y = mean_spike)) +
+  geom_point(data = unique_spike_noden) +
+  geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
+  labs(
+    x = "Deer Year",
+    y = "Mean Yearling Spike Length (inches)"  ) +
+  scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +  # Customize line colors
+  scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +  # Customize ribbon fills
+  theme_minimal() +
+  theme( axis.title.x = element_text(size = 15),  
+         axis.title.y = element_text(size = 15),
+         axis.text.x = element_text(size = 12),
+         axis.text.y = element_text(size = 12),
+         legend.text = element_text(size = 10),
+         axis.line = element_line(color = "black", size = 0.5),
+         panel.background = element_blank(),  # Remove background gridlines
+         legend.position = "bottom",  # Position the legend at the bottom
+         legend.title = element_blank())+ # Optionally remove the legend title
+  annotate("text", x = 1975, y = 1.1, label = noden_Spike_terms, size = 4, color = "#8A7D23", hjust = 0, vjust = 1) 
 
