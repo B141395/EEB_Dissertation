@@ -728,6 +728,8 @@ plot_model(Spike_noden, type = "pred")
 
 ggplot(combined_spike_noden, aes(x = DeerYear, y = mean_spike)) +
   geom_point(data = unique_spike_noden) +
+  geom_errorbar(data = unique_spike_noden, aes(ymin = mean_spike - std.error, ymax = mean_spike + std.error), width = 0.2) +  # Add error bars
+  geom_text(data = unique_spike_noden,aes(y = mean_spike + std.error + 0.1, label = paste0("(", sample_size, ")")), size = 3, color = "black") +
   geom_line(aes(y = predicted, color = Type)) +  # Predicted values with different colors
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +  # Confidence intervals with different fills
   labs(
@@ -745,7 +747,7 @@ ggplot(combined_spike_noden, aes(x = DeerYear, y = mean_spike)) +
          panel.background = element_blank(),  # Remove background gridlines
          legend.position = "bottom",  # Position the legend at the bottom
          legend.title = element_blank())+ # Optionally remove the legend title
-  annotate("text", x = 1975, y = 1.1, label = noden_Spike_terms, size = 4, color = "#8A7D23", hjust = 0, vjust = 1) 
+  annotate("text", x = 1972, y = 4.2, label = noden_Spike_terms, size = 4, color = "#8A7D23", hjust = 0, vjust = 1) 
               
 
 # Compare best model using ANOVA to determine significance of fixed effects
