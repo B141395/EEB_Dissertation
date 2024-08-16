@@ -31,12 +31,6 @@ The data used in this research spans from 1973 to 2022 and includes detailed rec
 - **Life-History Traits**: Data on birth weight, first winter survival, yearling spike length, and fecundity.
 - **Environmental Variables**: Yearly environmental data that may influence life-history traits.
 
-## Analysis Workflow
-1. **Data Cleaning**: Initial preprocessing of raw data to prepare it for analysis. Scripts for this step are located in the `Scripts/01_Data_Cleaning/` directory.
-2. **Exploratory Data Analysis**: Descriptive statistics and visualizations to explore trends and relationships in the data (`Scripts/02_EDA/`).
-3. **Model Fitting**: Application of generalized linear mixed models (GLMMs) to assess density-dependent effects on life-history traits (`Scripts/03_Model_Fitting/`).
-4. **Results Interpretation**: Generation of figures and tables summarizing the model outputs, with an emphasis on identifying significant patterns and temporal trends (`Results/`).
-
 ## Results
 The main findings of the research indicate that:
 - **Birth Weight**: Largely unaffected by population density, highlighting its stability across environmental conditions.
@@ -47,5 +41,5 @@ The main findings of the research indicate that:
 ## Usage
 To replicate the analysis or explore the data:
 1. Clone the repository: `git clone https://github.com/Hayward-Wong/EEB_Dissertation.git`
-2. Ensure you have R (version 4.3.1 or later) installed, along with the necessary packages listed in `Scripts/requirements.txt`.
-3. Run the scripts in the order specified under [Analysis Workflow](#analysis-workflow).
+2. Ensure you have R (version 4.3.1 or later) installed.
+3. Run the scripts.
