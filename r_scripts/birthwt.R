@@ -19,7 +19,7 @@ all_individuals <- rbind(ind_bw, ind_fws, ind_spike, ind_fecundity)
 all_individuals <- unique(all_individuals)
 
 # Read in external datasets
-birthwt <- read.csv("data/birth_wt_mum_age.csv")  # Birth weight and mother's age data
+birthwt <- read.csv("data/birthwt.csv")  # Birth weight and mother's age data
 Density <- read.csv("data/Population_estimate_calculations.csv")  # Population estimates data
 
 # Select relevant columns from Density data
