@@ -22,7 +22,7 @@ This project aims to refine our understanding of how population density impacts 
 | `data/`                                    | Contains all raw and processed data files used in the analysis. This includes population data, life-history traits data, and environmental variables related to the red deer population on the Isle of Rum.                                           |
 | `r_scripts/`                               | Contains R scripts for various stages of the analysis, including data cleaning, model fitting, and graph creation.                                                                                                                   |                                                     |                                                           |
 | `References/` | PDF documents of available papers referenced in the study.                                                                           |
-| `Weekly Updates`  | Documents of weekly progress and discussion.                                                                         |
+| `Weekly updates`  | Documents of weekly progress and discussion.                                                                         |
 | `B141395.pdf`             | PDF document of the final dissertation.                   |
 
 ## Data Description
