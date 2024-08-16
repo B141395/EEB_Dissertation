@@ -4,9 +4,13 @@ This directory contains all the data used for analyzing the density-dependent li
 
 ## Files Included
 
-- **Population_estimate_calculations.xlsx**: Excel file with population estimates and calculations across different years.
-- **Raw Data Files**: Various CSV files containing raw data on red deer population metrics and life-history traits.
-- **Processed Data Files**: Data files that have been cleaned and formatted for analysis.
+- **pop_est.csv**: Different Poplation estimates.
+- **birthwt.csv**: Birth weight data (n=3082).
+- **fws.csv**: First Winter Survival data (n=2241).
+- **spike.csv**: First Year Spike Length data, with birth weight (n=607)
+- **spike_nowt.csv**: First Year Spike Length data, without birth weight to replicate Schmidt 2001 (n=800)
+- **fecundity.csv**: Yearly Fecundity data of 917 hinds (n=6053)
+
 
 ## Usage
 
