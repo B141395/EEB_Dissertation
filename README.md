@@ -6,10 +6,8 @@ Welcome to the repository for my dissertation, which explores the density-depend
 - [Overview](#overview)
 - [Repository Structure](#repository-structure)
 - [Data Description](#data-description)
-- [Analysis Workflow](#analysis-workflow)
 - [Results](#results)
 - [Usage](#usage)
-- [Citing this Work](#citing-this-work)
 - [Acknowledgments](#acknowledgments)
 
 ## Overview
@@ -43,3 +41,7 @@ To replicate the analysis or explore the data:
 1. Clone the repository: `git clone https://github.com/Hayward-Wong/EEB_Dissertation.git`
 2. Ensure you have R (version 4.3.1 or later) installed.
 3. Run the scripts.
+
+## Acknowledgments
+I would like to express my sincere gratitude to the dedicated researchers of the Isle of Rum Red Deer Project who have been collecting and meticulously maintaining the data over the years. Your efforts have been invaluable to this research. I also acknowledge the role of AI tools in this project, particularly for coding support and literature review, which greatly enhanced the analysis and conceptual development. 
+
