@@ -8,11 +8,11 @@ library(ggeffects)  # For creating marginal effects plots
 library(cowplot)    # For combining multiple plots
 
 # Load the datasets used in the analysis
-Spike <- read.csv("spike.csv")               # Primary data including spike length
-nowt <- read.csv("Spike_nowt.csv")           # Data without birth weight to replicate Schmidt et al. 2001
-birth <- read.csv("Spike_nowt.csv")          # Used to replicate tests on birth year in Schmidt et al. 2001
-birth_w_wt <- read.csv("spike.csv")          # Data with birth weight
-Density <- read.csv("Population_estimate_calculations.csv")  # Deer population density data
+Spike <- read.csv("data/spike.csv")               # Primary data including spike length
+nowt <- read.csv("data/Spike_nowt.csv")           # Data without birth weight to replicate Schmidt et al. 2001
+birth <- read.csv("data/Spike_nowt.csv")          # Used to replicate tests on birth year in Schmidt et al. 2001
+birth_w_wt <- read.csv("data/spike.csv")          # Data with birth weight
+Density <- read.csv("data/Population_estimate_calculations.csv")  # Deer population density data
 
 # Adjust the birth year by subtracting 1 from the observed year of yearlings
 birth$DeerYear <- birth$DeerYear - 1
@@ -35,7 +35,7 @@ PopD7172 <- data.frame(
 PopD_new <- bind_rows(PopD7172, PopD)
 
 # Load the dataset that includes data for years 1971-1972
-nowt7172 <- read.csv("Spike_nowt.csv")
+nowt7172 <- read.csv("data/Spike_nowt.csv")
 
 # Plot the population density metrics over the years
 ggplot(PopD, aes(x = DeerYear)) +
@@ -577,101 +577,7 @@ summary(noyr_birth96Adults_spike)
 summary(noyr_birth96Total_spike)
 summary(noyr_birth96LU_Total_spike)
 
-# Fit GLMMs for spike length using FWS (without weight)
-FWS_nowtHinds_spike <- glmmTMB(AvgSpike ~ Hinds + DeerYear + rate + (1|DeerYear), data = nowt)
-FWS_nowtAdults_spike <- glmmTMB(AvgSpike ~ Adults + DeerYear + rate + (1|DeerYear), data = nowt)
-FWS_nowtTotal_spike <- glmmTMB(AvgSpike ~ Total + DeerYear + rate + (1|DeerYear), data = nowt)
-FWS_nowtLU_Total_spike <- glmmTMB(AvgSpike ~ LU_Total + DeerYear + rate + (1|DeerYear), data = nowt)
 
-# Summarize the models
-summary(FWS_nowtHinds_spike)
-summary(FWS_nowtAdults_spike)
-summary(FWS_nowtTotal_spike)
-summary(FWS_nowtLU_Total_spike)
-
-# Fit similar models for the data limited to years up to 1996
-FWS_nowt96Hinds_spike <- glmmTMB(AvgSpike ~ Hinds + DeerYear + rate + (1|DeerYear), data = nowt96)
-FWS_nowt96Adults_spike <- glmmTMB(AvgSpike ~ Adults + DeerYear + rate + (1|DeerYear), data = nowt96)
-FWS_nowt96Total_spike <- glmmTMB(AvgSpike ~ Total + DeerYear + rate + (1|DeerYear), data = nowt96)
-FWS_nowt96LU_Total_spike <- glmmTMB(AvgSpike ~ LU_Total + DeerYear + rate + (1|DeerYear), data = nowt96)
-
-# Summarize the models for the 1996 data
-summary(FWS_nowt96Hinds_spike)
-summary(FWS_nowt96Adults_spike)
-summary(FWS_nowt96Total_spike)
-summary(FWS_nowt96LU_Total_spike)
-
-# Fit GLMMs using birth year without weight
-FWS_birthHinds_spike <- glmmTMB(AvgSpike ~ Hinds + DeerYear + rate + (1|DeerYear), data = birth)
-FWS_birthAdults_spike <- glmmTMB(AvgSpike ~ Adults + DeerYear + rate + (1|DeerYear), data = birth)
-FWS_birthTotal_spike <- glmmTMB(AvgSpike ~ Total + DeerYear + rate + (1|DeerYear), data = birth)
-FWS_birthLU_Total_spike <- glmmTMB(AvgSpike ~ LU_Total + DeerYear + rate + (1|DeerYear), data = birth)
-
-# Summarize the models
-summary(FWS_birthHinds_spike)
-summary(FWS_birthAdults_spike)
-summary(FWS_birthTotal_spike)
-summary(FWS_birthLU_Total_spike)
-
-# Fit similar models for the data limited to years up to 1996
-FWS_birth96Hinds_spike <- glmmTMB(AvgSpike ~ Hinds + DeerYear + rate + (1|DeerYear), data = birth96)
-FWS_birth96Adults_spike <- glmmTMB(AvgSpike ~ Adults + DeerYear + rate + (1|DeerYear), data = birth96)
-FWS_birth96Total_spike <- glmmTMB(AvgSpike ~ Total + DeerYear + rate + (1|DeerYear), data = birth96)
-FWS_birth96LU_Total_spike <- glmmTMB(AvgSpike ~ LU_Total + DeerYear + rate + (1|DeerYear), data = birth96)
-
-# Summarize the models for the 1996 data
-summary(FWS_birth96Hinds_spike)
-summary(FWS_birth96Adults_spike)
-summary(FWS_birth96Total_spike)
-summary(FWS_birth96LU_Total_spike)
-
-# Fit GLMMs without year as a fixed effect, using FWS
-FWS_noyr_nowtHinds_spike <- glmmTMB(AvgSpike ~ Hinds + rate + (1|DeerYear), data = nowt)
-FWS_noyr_nowtAdults_spike <- glmmTMB(AvgSpike ~ Adults + rate + (1|DeerYear), data = nowt)
-FWS_noyr_nowtTotal_spike <- glmmTMB(AvgSpike ~ Total + rate + (1|DeerYear), data = nowt)
-FWS_noyr_nowtLU_Total_spike <- glmmTMB(AvgSpike ~ LU_Total + rate + (1|DeerYear), data = nowt)
-
-# Summarize the models
-summary(FWS_noyr_nowtHinds_spike)
-summary(FWS_noyr_nowtAdults_spike)
-summary(FWS_noyr_nowtTotal_spike)
-summary(FWS_noyr_nowtLU_Total_spike)
-
-# Fit similar models for the data limited to years up to 1996
-FWS_noyr_nowt96Hinds_spike <- glmmTMB(AvgSpike ~ Hinds + rate + (1|DeerYear), data = nowt96)
-FWS_noyr_nowt96Adults_spike <- glmmTMB(AvgSpike ~ Adults + rate + (1|DeerYear), data = nowt96)
-FWS_noyr_nowt96Total_spike <- glmmTMB(AvgSpike ~ Total + rate + (1|DeerYear), data = nowt96)
-FWS_noyr_nowt96LU_Total_spike <- glmmTMB(AvgSpike ~ LU_Total + rate + (1|DeerYear), data = nowt96)
-
-# Summarize the models for the 1996 data
-summary(FWS_noyr_nowt96Hinds_spike)
-summary(FWS_noyr_nowt96Adults_spike)
-summary(FWS_noyr_nowt96Total_spike)
-summary(FWS_noyr_nowt96LU_Total_spike)
-
-# Fit GLMMs for birth year without year as a fixed effect, using FWS
-FWS_noyr_birthHinds_spike <- glmmTMB(AvgSpike ~ Hinds + rate + (1|DeerYear), data = birth)
-FWS_noyr_birthAdults_spike <- glmmTMB(AvgSpike ~ Adults + rate + (1|DeerYear), data = birth)
-FWS_noyr_birthTotal_spike <- glmmTMB(AvgSpike ~ Total + rate + (1|DeerYear), data = birth)
-FWS_noyr_birthLU_Total_spike <- glmmTMB(AvgSpike ~ LU_Total + rate + (1|DeerYear), data = birth)
-
-# Summarize the models
-summary(FWS_noyr_birthHinds_spike)
-summary(FWS_noyr_birthAdults_spike)
-summary(FWS_noyr_birthTotal_spike)
-summary(FWS_noyr_birthLU_Total_spike)
-
-# Fit similar models for the data limited to years up to 1996
-FWS_noyr_birth96Hinds_spike <- glmmTMB(AvgSpike ~ Hinds + rate + (1|DeerYear), data = birth96)
-FWS_noyr_birth96Adults_spike <- glmmTMB(AvgSpike ~ Adults + rate + (1|DeerYear), data = birth96)
-FWS_noyr_birth96Total_spike <- glmmTMB(AvgSpike ~ Total + rate + (1|DeerYear), data = birth96)
-FWS_noyr_birth96LU_Total_spike <- glmmTMB(AvgSpike ~ LU_Total + rate + (1|DeerYear), data = birth96)
-
-# Summarize the models for the 1996 data
-summary(FWS_noyr_birth96Hinds_spike)
-summary(FWS_noyr_birth96Adults_spike)
-summary(FWS_noyr_birth96Total_spike)
-summary(FWS_noyr_birth96LU_Total_spike)
 
 # Combine and plot predictions for adults with and without year as a fixed effect, using FWS
 Spike_pred_Adults_yr$Type <- "With Year as Fixed effect"

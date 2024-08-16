@@ -19,8 +19,8 @@ all_individuals <- rbind(ind_bw, ind_fws, ind_spike, ind_fecundity)
 all_individuals <- unique(all_individuals)
 
 # Read in external datasets
-birthwt <- read.csv("birth_wt_mum_age.csv")  # Birth weight and mother's age data
-Density <- read.csv("Population_estimate_calculations.csv")  # Population estimates data
+birthwt <- read.csv("data/birth_wt_mum_age.csv")  # Birth weight and mother's age data
+Density <- read.csv("data/Population_estimate_calculations.csv")  # Population estimates data
 
 # Select relevant columns from Density data
 PopD <- Density %>% select(DeerYear, Hinds, Stags, Calves, Calves_M, Calves_F, Adults, Total, LU_Total)
@@ -247,6 +247,7 @@ Mum_noden_bw <- glmmTMB(BirthWt ~ Sex
                         family = gaussian(), data = birthwt)
 summary(Mum_noden_bw)
 
+
 # Fit a GLMM without DeerYear as a fixed effect
 Mum_noyr_noden_bw <- glmmTMB(BirthWt ~ Sex
                              + DaysFrom1May
@@ -257,6 +258,19 @@ Mum_noyr_noden_bw <- glmmTMB(BirthWt ~ Sex
                              + (1|MumCode),
                              family = gaussian(), data = birthwt)
 summary(Mum_noyr_noden_bw)
+
+tab_model(Mum_noyr_noden_bw)
+tab_model(Mum_noden_bw)
+tab_model(noyr_Mum_Hinds_bw)
+tab_model(Mum_Hinds_bw)
+tab_model(noyr_Mum_Adults_bw)
+tab_model(Mum_Adults_bw)
+tab_model(noyr_Mum_Total_bw)
+tab_model(Mum_Total_bw)
+tab_model(noyr_Mum_LU_Total_bw)
+tab_model(Mum_LU_Total_bw)
+
+
 
 # Fit GLMMs without DeerYear as a fixed effect but with population density metrics
 noyr_Mum_Hinds_bw <- glmmTMB(BirthWt ~ Hinds

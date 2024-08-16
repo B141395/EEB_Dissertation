@@ -7,8 +7,8 @@ library(glmmTMB)     # For fitting generalized linear mixed models using Templat
 library(ggeffects)   # For computing marginal effects from regression models
 
 # Load the data
-FWS <- read.csv("FWS_data.csv")  # Load first winter survival data
-Density <- read.csv("Population_estimate_calculations.csv")  # Load population density data
+FWS <- read.csv("data/FWS_data.csv")  # Load first winter survival data
+Density <- read.csv("data/Population_estimate_calculations.csv")  # Load population density data
 
 # Preprocess FWS data
 FWS <- FWS %>% filter(!DeerYear %in% c(2022, 2023))  # Remove data from years 2022 and 2023

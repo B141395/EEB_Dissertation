@@ -8,8 +8,8 @@ library(ggeffects)  # For creating predicted values from models
 library(sjPlot)  # For visualizing results from statistical models
 
 # Load data for fecundity and population density
-fecundity <- read.csv("Fecundity.csv")  # Read the fecundity data
-Density <- read.csv("Population_estimate_calculations.csv")  # Read the population density data
+fecundity <- read.csv("data/data/Fecundity.csv")  # Read the fecundity data
+Density <- read.csv("data/data/Population_estimate_calculations.csv")  # Read the population density data
 
 # Select relevant columns from the density data
 PopD <- Density %>% select(DeerYear, Hinds, Adults, Total, LU_Total)  # Select specific columns
@@ -861,7 +861,7 @@ ggplot(combined_fecundity_Hinds, aes(x = Hinds, y = Fecundity)) +
   geom_line(aes(y = predicted, color = Type)) +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +
   labs(x = "Hind Population Size",
-       y = "Predicted Probability of female reproduction") +
+       y = "Predicted Probability of Conception") +
   scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +
   scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +
   theme_minimal() +
@@ -976,8 +976,8 @@ ggplot(combined_fecundity_LU_Total, aes(x = LU_Total, y = Fecundity)) +
   geom_line(aes(y = predicted, color = Type)) +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = Type), alpha = 0.2) +
   labs(x = "LU_Total Density",
-       y = "Predicted Probability of female reproduction",
-       title = "Predicted Probability of female reproduction over Density\nwith 95% Confidence Interval") +
+       y = "Predicted Probability of Conception",
+       title = "Predicted Probability of Conception over Density\nwith 95% Confidence Interval") +
   scale_color_manual(values = c("With Year as Fixed effect" = "blue", "Without Year as Fixed effect" = "red")) +
   scale_fill_manual(values = c("With Year as Fixed effect" = "lightblue", "Without Year as Fixed effect" = "lightpink")) +
   theme_minimal() +
@@ -996,10 +996,46 @@ print(predictions_LU_Total_fecundity_noyr)
 print(predictions_int_adult_fecundity_yr)
 
 # Plot models with sjPlot
+set_theme(base = theme_minimal()
+          +theme(plot.title = element_blank(),
+                 axis.line = element_line(color = "black"),
+                 axis.title.x = element_text(size = 15),
+                 axis.title.y = element_text(size = 15),
+                 axis.text.x = element_text(size = 12),
+                 axis.text.y = element_text(size = 12),
+                 legend.text = element_text(size = 10),
+                 legend.title = element_blank()),
+          legend.pos = "bottom")
 plot_model(Hinds_fecundity_age, type = "pred", terms = "Hinds[all]")
 plot_model(int_yr_Adults_fecundity_age, type = "pred", terms = c("DeerYear [all]", "ReprodStatus"))
 plot_model(int_yr_Adults_fecundity_age, type = "pred", terms = c("Adults [all]"))
-plot_model(int_yr_Adults_fecundity_age, type = "pred", terms = c("Adults [all]", "ReprodStatus"))
+
+int_adults_sjplot_terms <- paste(
+  "Adjusted for:",
+  "Hind's Age = 7",
+  "Hind's Age Squared = 49",
+  "Deer Year = 2000",
+  sep = "\n"
+)
+
+plot_model(int_yr_Adults_fecundity_age, 
+           type = "pred", 
+           terms = c("Adults [all]", "ReprodStatus"))+ labs(
+             x = "Adult Population Size",
+             y = "Predicted Probability of Conception",
+               color = "Female Reproductive Status" ) +
+  theme(  legend.title = element_text(size = 12, face = "plain"),  # Remove bold
+          legend.justification = "center", 
+          legend.title.position = "top"  # Position title above the legend
+  ) + scale_y_continuous(
+    limits = c(0, 1),               # Set y-axis limits from 0 to 1
+    breaks = seq(0, 1, by = 0.25),   # Set y-axis breaks (e.g., 0.0, 0.1, ..., 1.0)
+    labels = scales::number_format(accuracy = 0.01)  # Format labels as 0.00 to 1.00
+  ) + labs(
+    y = "Predicted Probability of Conception"  # Update y-axis title to reflect proportions
+  )+
+  annotate("text", x = 190, y = 0.25, label = int_adults_sjplot_terms, size = 4, color = "#8A7D23", hjust = 0, vjust = 1)
+
 
 # Generate predictions for interaction terms
 predictions_int_adult_fecundity_yr <- ggpredict(int_yr_Adults_fecundity_age, terms = "Adults [all]")
@@ -1029,6 +1065,7 @@ int_adults_Fec_terms <- paste(
   "Deer Year = 2000",
   sep = "\n"
 )
+
 
 # Plot the combined data
 ggplot(combined_fecundity_int_adults, aes(x = Adults, y = Fecundity)) +
