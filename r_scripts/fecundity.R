@@ -8,8 +8,8 @@ library(ggeffects)  # For creating predicted values from models
 library(sjPlot)  # For visualizing results from statistical models
 
 # Load data for fecundity and population density
-fecundity <- read.csv("data/data/Fecundity.csv")  # Read the fecundity data
-Density <- read.csv("data/data/Population_estimate_calculations.csv")  # Read the population density data
+fecundity <- read.csv("data/data/fecundity.csv")  # Read the fecundity data
+Density <- read.csv("data/data/pop_est.csv")  # Read the population density data
 
 # Select relevant columns from the density data
 PopD <- Density %>% select(DeerYear, Hinds, Adults, Total, LU_Total)  # Select specific columns

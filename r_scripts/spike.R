@@ -9,10 +9,10 @@ library(cowplot)    # For combining multiple plots
 
 # Load the datasets used in the analysis
 Spike <- read.csv("data/spike.csv")               # Primary data including spike length
-nowt <- read.csv("data/Spike_nowt.csv")           # Data without birth weight to replicate Schmidt et al. 2001
-birth <- read.csv("data/Spike_nowt.csv")          # Used to replicate tests on birth year in Schmidt et al. 2001
+nowt <- read.csv("data/spike_nowt.csv")           # Data without birth weight to replicate Schmidt et al. 2001
+birth <- read.csv("data/spike_nowt.csv")          # Used to replicate tests on birth year in Schmidt et al. 2001
 birth_w_wt <- read.csv("data/spike.csv")          # Data with birth weight
-Density <- read.csv("data/Population_estimate_calculations.csv")  # Deer population density data
+Density <- read.csv("data/pop_est.csv")  # Deer population density data
 
 # Adjust the birth year by subtracting 1 from the observed year of yearlings
 birth$DeerYear <- birth$DeerYear - 1

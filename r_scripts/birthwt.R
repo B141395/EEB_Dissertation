@@ -20,7 +20,7 @@ all_individuals <- unique(all_individuals)
 
 # Read in external datasets
 birthwt <- read.csv("data/birthwt.csv")  # Birth weight and mother's age data
-Density <- read.csv("data/Population_estimate_calculations.csv")  # Population estimates data
+Density <- read.csv("data/pop_est.csv")  # Population estimates data
 
 # Select relevant columns from Density data
 PopD <- Density %>% select(DeerYear, Hinds, Stags, Calves, Calves_M, Calves_F, Adults, Total, LU_Total)
